@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Settings</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/storage.js"></script>
+<script src="data/defaultMenu.js"></script>
+<script src="data/defaultPackaging.js"></script>
+<script src="data/defaultConfig.js"></script>
+
+</head>
+
+<body>
+
+
+<div class="app">
+
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="logo">
+UTEALITY
+</div>
+
+<a class="menuItem" href="dashboard.html">
+Dashboard
+</a>
+
+<a class="menuItem" href="order.html">
+New Order
+</a>
+
+<a class="menuItem" href="reports.html">
+Reports
+</a>
+
+<a class="menuItem active" href="settings.html">
+Settings
+</a>
+
+</div>
+
+
+
+<!-- MAIN -->
+
+<div class="main">
+
+
+<div class="topbar">
+
+<div class="topbarTitle">
+Settings
+</div>
+
+<div class="topbarRight">
+Cloud Kitchen Panel
+</div>
+
+</div>
+
+
+
+<div class="content">
+
+
+<!-- CONFIG -->
+
+<div class="card">
+
+<div class="cardTitle">
+Config
+</div>
+
+
+<div class="grid">
+
+
+<div class="formGroup">
+
+<div class="formLabel">
+Commission %
+</div>
+
+<input id="commission">
+
+</div>
+
+
+<div class="formGroup">
+
+<div class="formLabel">
+Long Distance Fee
+</div>
+
+<input id="longFee">
+
+</div>
+
+
+</div>
+
+
+<button onclick="saveConfig()">
+Save Config
+</button>
+
+</div>
+
+
+
+<!-- MENU -->
+
+<div class="card">
+
+<div class="cardTitle">
+Menu Items
+</div>
+
+<div id="menuArea"></div>
+
+<br>
+
+<button onclick="addMenu()">
+Add Item
+</button>
+
+<button onclick="saveMenu()">
+Save Menu
+</button>
+
+</div>
+
+
+
+<!-- PACKAGING -->
+
+<div class="card">
+
+<div class="cardTitle">
+Packaging
+</div>
+
+<div id="packArea"></div>
+
+<br>
+
+<button onclick="addPack()">
+Add
+</button>
+
+<button onclick="savePack()">
+Save Packaging
+</button>
+
+</div>
+
+
+
+</div>
+</div>
+</div>
+
+
+
+<script>
+
+
+let menu=getData("menu")||defaultMenu
+let pack=getData("pack")||defaultPackaging
+let config=getData("config")||defaultConfig
+
+
+document.getElementById("commission").value=config.commission
+document.getElementById("longFee").value=config.longDistance
+
+
+
+function saveConfig(){
+
+config.commission=
+Number(document.getElementById("commission").value)
+
+config.longDistance=
+Number(document.getElementById("longFee").value)
+
+saveData("config",config)
+
+alert("Saved")
+
+}
+
+
+
+function loadMenu(){
+
+let d=document.getElementById("menuArea")
+
+d.innerHTML=""
+
+menu.forEach(m=>{
+
+let n=document.createElement("input")
+n.value=m.name
+
+let p=document.createElement("input")
+p.value=m.price
+
+d.appendChild(n)
+d.appendChild(p)
+
+d.appendChild(document.createElement("br"))
+
+})
+
+}
+
+loadMenu()
+
+
+
+function addMenu(){
+
+menu.push({name:"Item",price:0})
+
+loadMenu()
+
+}
+
+
+
+function saveMenu(){
+
+let inputs=document
+.querySelectorAll("#menuArea input")
+
+menu=[]
+
+for(let i=0;i<inputs.length;i+=2){
+
+menu.push({
+
+name:inputs[i].value,
+price:Number(inputs[i+1].value)
+
+})
+
+}
+
+saveData("menu",menu)
+
+alert("Saved")
+
+}
+
+
+
+function loadPack(){
+
+let d=document.getElementById("packArea")
+
+d.innerHTML=""
+
+pack.forEach(m=>{
+
+let n=document.createElement("input")
+n.value=m.name
+
+let p=document.createElement("input")
+p.value=m.price
+
+d.appendChild(n)
+d.appendChild(p)
+
+d.appendChild(document.createElement("br"))
+
+})
+
+}
+
+loadPack()
+
+
+
+function addPack(){
+
+pack.push({name:"Item",price:0})
+
+loadPack()
+
+}
+
+
+
+function savePack(){
+
+let inputs=document
+.querySelectorAll("#packArea input")
+
+pack=[]
+
+for(let i=0;i<inputs.length;i+=2){
+
+pack.push({
+
+name:inputs[i].value,
+price:Number(inputs[i+1].value)
+
+})
+
+}
+
+saveData("pack",pack)
+
+alert("Saved")
+
+}
+
+
+</script>
+
+
+</body>
+</html>

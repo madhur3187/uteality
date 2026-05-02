@@ -1,0 +1,21 @@
+.section{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.container{
+width:100%;
+max-width:100%;
+}
+
+
+.mt10{margin-top:10px;}
+.mt20{margin-top:20px;}
+
+.mb10{margin-bottom:10px;}
+.mb20{margin-bottom:20px;}
+
+.topbar{
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}

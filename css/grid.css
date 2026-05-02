@@ -1,0 +1,50 @@
+.grid{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:20px;
+
+}
+
+
+.grid3{
+
+display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+
+}
+
+
+.checkboxGrid{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:6px;
+
+}
+
+
+.checkboxItem{
+
+display:flex;
+
+align-items:center;
+
+gap:6px;
+
+background:#020617;
+
+border:1px solid #1e293b;
+
+padding:6px 8px;
+
+border-radius:8px;
+
+font-size:12px;
+
+}

@@ -1,0 +1,103 @@
+
+
+/* glass effect */
+
+.glass{
+
+background:rgba(15,23,42,0.6);
+
+backdrop-filter:blur(8px);
+
+border:1px solid rgba(148,163,184,0.2);
+
+}
+
+
+/* hover card */
+
+.card:hover{
+
+transform:translateY(-2px);
+
+box-shadow:
+0 12px 25px rgba(0,0,0,0.7);
+
+}
+
+
+/* better buttons */
+
+button{
+
+background:#22c55e;
+
+border:none;
+
+padding:10px 14px;
+
+border-radius:10px;
+
+color:white;
+
+cursor:pointer;
+
+margin-right:5px;
+
+}
+
+
+button:hover{
+
+background:#16a34a;
+
+}
+
+button:active{
+  transform:scale(0.97);
+}
+
+/* table */
+
+table{
+
+border-collapse:collapse;
+
+width:100%;
+
+}
+
+th,td{
+
+padding:8px;
+
+border-bottom:1px solid #1e293b;
+
+text-align:left;
+
+}
+
+tr:hover{
+
+background:#0f172a;
+
+}
+
+
+/* scroll */
+
+::-webkit-scrollbar{
+
+width:6px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:#1e293b;
+
+border-radius:10px;
+
+}
+button, .card, .statCard{
+  transition:0.2s ease;
+}

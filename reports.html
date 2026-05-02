@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Reports</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/storage.js"></script>
+
+<style>
+
+.modal{
+
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+
+background:rgba(0,0,0,0.6);
+
+display:none;
+
+align-items:center;
+justify-content:center;
+
+}
+
+.modalBox{
+
+background:#020617;
+
+border:1px solid #1e293b;
+
+padding:20px;
+
+border-radius:12px;
+
+width:400px;
+
+}
+
+.modalTitle{
+
+font-weight:600;
+margin-bottom:10px;
+
+}
+
+.closeBtn{
+
+float:right;
+cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<div class="app">
+
+
+<div class="sidebar">
+
+<div class="logo">
+  <img src="assets/logo_transparent.png" alt="uTEAlity Logo">
+</div>
+
+<a class="menuItem" href="dashboard.html">Dashboard</a>
+<a class="menuItem" href="order.html">New Order</a>
+<a class="menuItem active" href="reports.html">Reports</a>
+<a class="menuItem" href="settings.html">Settings</a>
+
+</div>
+
+
+
+<div class="main">
+
+
+<div class="topbar">
+
+<div class="topbarTitle">Reports</div>
+<div class="topbarRight">Cloud Kitchen Panel</div>
+
+</div>
+
+
+
+<div class="content">
+
+
+<div class="card">
+
+<div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap">
+
+<div>
+<label>Range</label><br>
+<select id="range" onchange="loadTable()">
+<option value="all">All</option>
+<option value="day">Today</option>
+<option value="week">Week</option>
+<option value="month">Month</option>
+</select>
+</div>
+
+<div>
+<label>From</label><br>
+<input type="date" id="fromDate" onchange="loadTable()">
+</div>
+
+<div>
+<label>To</label><br>
+<input type="date" id="toDate" onchange="loadTable()">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<table width="100%" id="table"></table>
+
+</div>
+
+
+</div>
+</div>
+</div>
+
+
+
+<!-- MODAL -->
+
+<div id="modal" class="modal">
+
+<div class="modalBox">
+
+<div class="modalTitle">
+
+Order Details
+
+<span class="closeBtn" onclick="closeModal()">X</span>
+
+</div>
+
+<div id="modalContent"></div>
+
+</div>
+
+</div>
+
+
+
+<script>
+
+
+function loadTable(){
+
+let orders=getData("orders")||[]
+
+orders.sort((a,b)=>b.date - a.date)
+
+let range=document.getElementById("range").value
+let fromDate = document.getElementById("fromDate").value
+let toDate = document.getElementById("toDate").value
+let platformFilterEl = document.getElementById("platformFilter")
+let platformFilter = platformFilterEl ? platformFilterEl.value : "Both"
+
+let now=Date.now()
+let totalProfit = 0
+let totalSelling = 0
+let totalPackaging = 0
+let shownOrders = 0
+let t=document.getElementById("table")
+
+
+t.innerHTML=`
+
+<tr>
+<th>Date</th>
+<th>Order</th>
+<th>Platform</th>
+<th>Selling</th>
+<th>Packaging</th>
+<th>Making</th>
+<th>Profit</th>
+<th>Margin %</th>
+<th>Remark</th>
+<th>Delete</th>
+</tr>
+
+`
+
+orders.forEach((o,i)=>{
+
+let ok=true
+
+let orderDate = new Date(o.date)
+
+// FROM DATE
+if(fromDate){
+  let from = new Date(fromDate)
+  from.setHours(0,0,0,0)
+
+  if(orderDate < from) ok = false
+}
+
+// TO DATE
+if(toDate){
+  let to = new Date(toDate)
+  to.setHours(23,59,59,999)
+
+  if(orderDate > to) ok = false
+}
+
+
+// EXISTING CODE (DO NOT TOUCH BELOW)
+
+if(range=="day"){
+  if(now-o.date>86400000) ok=false
+}
+
+if(range=="week"){
+  if(now-o.date>604800000) ok=false
+}
+
+if(range=="month"){
+  if(now-o.date>2592000000) ok=false
+}
+
+if(ok){
+
+// platform filter
+if(platformFilter && platformFilter !== "Both" && o.platform !== platformFilter){
+  return
+}
+
+
+
+let tr=document.createElement("tr")
+
+// Date
+let td1=document.createElement("td")
+td1.innerText=new Date(o.date).toLocaleString()
+
+// Order clickable
+let td2=document.createElement("td")
+
+let link=document.createElement("span")
+link.innerText=o.orderNo
+link.style.cursor="pointer"
+link.style.color="#22c55e"
+
+link.onclick=function(){
+showOrder(o)
+}
+
+td2.appendChild(link)
+
+let tdPlatform=document.createElement("td")
+tdPlatform.innerText=o.platform || "-"
+
+if(o.platform==="Zomato"){
+tdPlatform.style.color="#ef4444"
+}
+else if(o.platform==="Swiggy"){
+tdPlatform.style.color="#f97316"
+}
+
+// Selling (Bill Value)
+
+
+let td3=document.createElement("td")
+td3.innerText="₹ " + (o.billValue || 0).toFixed(2)
+
+// Packaging (calculate from array)
+let packTotal = 0
+
+if(Array.isArray(o.packaging)){
+o.packaging.forEach(p=>{
+packTotal += p.price * p.qty
+})
+}else{
+packTotal = o.packaging || 0
+}
+
+totalPackaging += packTotal
+
+totalSelling += (o.billValue || 0)
+
+
+let td4=document.createElement("td")
+td4.innerText="₹ " + packTotal.toFixed(2)
+
+// Making Cost
+let td5=document.createElement("td")
+td5.innerText="₹ " + (o.making || 0).toFixed(2)
+
+// Profit
+let td6=document.createElement("td")
+td6.innerText="₹ " + (o.profit || 0).toFixed(2)
+// Profit Margin %
+
+
+let margin = 0
+
+if(o.billValue && o.billValue > 0){
+margin = (o.profit / o.billValue) * 100
+}
+
+// highlight loss row
+if(margin < 0){
+tr.style.background = "rgba(255,0,0,0.08)"
+}
+
+
+let td7=document.createElement("td")
+td7.innerText = margin.toFixed(1) + "%"
+
+// color logic
+if(margin < 0){
+td7.style.color = "red"
+}
+else if(margin < 10){
+td7.style.color = "#f59e0b"
+}
+else{
+td7.style.color = "#22c55e"
+}
+
+// track total
+totalProfit += (o.profit || 0)
+
+if(o.profit < 0){
+td6.style.color="red"
+}else{
+td6.style.color="#22c55e"
+}
+
+let td9=document.createElement("td")
+
+
+let remark = ""
+
+if(margin < 0){
+remark = "Loss"
+}
+else if(margin < 5){
+remark = "Poor"
+}
+else if(margin < 10){
+remark = "Avg"
+}
+else if(margin < 20){
+remark = "Good"
+}
+else{
+remark = "Excellent"
+}
+
+td9.innerText = remark
+
+// Delete button
+let td8=document.createElement("td")
+
+let b=document.createElement("button")
+b.innerText="Delete"
+
+b.onclick=function(){
+if(confirm("Delete this order?")){
+deleteOrder(o.date)
+}
+}
+
+td8.appendChild(b)
+
+// append all
+tr.appendChild(td1)
+tr.appendChild(td2)
+tr.appendChild(tdPlatform)
+tr.appendChild(td3)
+tr.appendChild(td4)
+tr.appendChild(td5)
+tr.appendChild(td6)
+tr.appendChild(td7)  
+tr.appendChild(td9)
+tr.appendChild(td8)
+
+t.appendChild(tr)
+shownOrders++
+
+}
+
+})
+if(shownOrders === 0){
+  return
+}
+let totalRow = document.createElement("tr")
+totalRow.style.fontWeight = "600"
+
+// empty
+let t1=document.createElement("td")
+
+let t2=document.createElement("td")
+t2.innerText="TOTAL"
+
+let tPlatform=document.createElement("td")
+
+// Selling Total
+let t3=document.createElement("td")
+t3.innerText = totalSelling.toFixed(2)
+
+// empty
+let t4=document.createElement("td")
+t4.innerText = totalPackaging.toFixed(2)
+let t5=document.createElement("td")
+
+// Profit Total
+let t6=document.createElement("td")
+t6.innerText = totalProfit.toFixed(2)
+
+if(totalProfit < 0){
+t6.style.color="red"
+}else{
+t6.style.color="#22c55e"
+}
+
+// Overall Margin %
+let overallMargin = 0
+
+if(totalSelling > 0){
+overallMargin = (totalProfit / totalSelling) * 100
+}
+
+let t7=document.createElement("td")
+t7.innerText = overallMargin.toFixed(1) + "%"
+
+// Remark
+let t8=document.createElement("td")
+
+let remark = ""
+
+if(overallMargin < 5){
+remark = "Poor"
+t8.style.color = "red"
+}
+else if(overallMargin < 10){
+remark = "Average"
+t8.style.color = "#f59e0b"
+}
+else if(overallMargin < 20){
+remark = "Good"
+t8.style.color = "#22c55e"
+}
+else{
+remark = "Excellent"
+t8.style.color = "#22c55e"
+}
+
+t8.innerText = remark
+
+let t9=document.createElement("td") //Delete
+
+// append
+totalRow.appendChild(t1)
+totalRow.appendChild(t2)
+totalRow.appendChild(tPlatform)
+totalRow.appendChild(t3)
+totalRow.appendChild(t4)
+totalRow.appendChild(t5)
+totalRow.appendChild(t6)
+totalRow.appendChild(t7)
+totalRow.appendChild(t8) //Remark
+totalRow.appendChild(t9) // delete
+
+
+t.appendChild(totalRow)
+}
+
+function showOrder(o){
+
+
+let html=""
+
+html+="Order #: "+o.orderNo+"<br><br>"
+html+="Platform: "+(o.platform || "-")+"<br>"
+
+html+="Items:<br>"
+
+o.items.forEach(x=>{
+
+if(typeof x === "string"){
+  html += x + "<br>"   // old orders support
+}else{
+  html += x.name + " x " + x.qty + "<br>"
+}
+
+})
+let packTotal = 0
+
+if(Array.isArray(o.packaging)){
+o.packaging.forEach(p=>{
+packTotal += p.price * p.qty
+})
+}
+
+html+="<br>"
+
+html+="Total: "+o.total+"<br>"
+html+="Commission: "+o.commission+"<br>"
+html+="Selling: "+o.billValue+"<br>"
+html+="Packaging: "+packTotal+"<br>"
+html+="Making: "+o.making+"<br>"
+html+="Long Fee: "+o.longFee+"<br>"
+html+="Profit: "+o.profit+"<br>"
+
+document.getElementById("modalContent").innerHTML=html
+document.getElementById("modal").style.display="flex"
+
+
+}
+
+
+
+function closeModal(){
+
+document.getElementById("modal").style.display="none"
+
+}
+
+
+
+function deleteOrder(orderDate){
+
+let orders = getData("orders") || []
+
+orders = orders.filter(x => x.date !== orderDate)
+
+saveData("orders", orders)
+
+loadTable()
+
+}
+
+let today = new Date().toISOString().split("T")[0]
+
+// Set From Date
+if(!document.getElementById("fromDate").value){
+  document.getElementById("fromDate").value = today
+}
+
+// Set To Date
+if(!document.getElementById("toDate").value){
+  document.getElementById("toDate").value = today
+}
+
+loadTable()
+
+
+</script>
+
+
+</body>
+</html>

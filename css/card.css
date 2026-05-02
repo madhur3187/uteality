@@ -1,0 +1,122 @@
+.card{
+  background:linear-gradient(
+    145deg,
+    rgba(15,23,42,0.55),
+    rgba(2,6,23,0.5)
+  );
+  border:1px solid rgba(148,163,184,0.12);
+  border-radius:16px;
+  padding:20px;
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+
+.cardTitle{
+
+font-size:14px;
+
+margin-bottom:10px;
+
+color:#94a3b8;
+
+}
+
+.card, .statCard{
+  border:1px solid rgba(255,255,255,0.06);
+}
+/* stat */
+
+.statCard{
+  background:rgba(15,23,42,0.6);
+  border:1px solid rgba(148,163,184,0.15);
+  border-radius:16px;
+  padding:18px;
+  backdrop-filter:blur(8px);
+
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  position:relative;
+
+  transition:0.25s;
+}
+
+.statCard:hover{
+  transform:translateY(-4px);
+  border-color:#22c55e;
+  box-shadow:0 10px 30px rgba(34,197,94,0.15);
+}
+
+.statCard::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:3px;
+  height:100%;
+  background:#22c55e;
+  border-radius:10px 0 0 10px;
+  opacity:0.6;
+}
+
+
+.statLabel{
+
+font-size:12px;
+color:#94a3b8;
+
+}
+
+
+.statValue{
+
+font-size:22px;
+font-weight:600;
+
+}
+
+
+/* profit */
+
+.profitBox{
+
+border-radius:12px;
+
+padding:12px;
+
+text-align:center;
+
+font-size:18px;
+
+font-weight:600;
+
+margin-top:10px;
+
+}
+
+.profitPositive{
+
+background:rgba(34,197,94,0.2);
+border:1px solid #22c55e;
+color:#22c55e;
+
+}
+
+.profitNegative{
+
+background:rgba(239,68,68,0.2);
+border:1px solid #ef4444;
+color:#ef4444;
+
+}
+
+.cardPrimary{
+  border:1px solid rgba(34,197,94,0.4);
+  box-shadow:0 10px 30px rgba(34,197,94,0.15);
+}
+
+.cardSoft{
+  background:rgba(15,23,42,0.4);
+}

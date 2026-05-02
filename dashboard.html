@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/storage.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+</head>
+
+<body>
+
+
+<div class="app">
+
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="logo">
+  <img src="assets/logo_transparent.png" alt="uTEAlity Logo">
+</div>
+
+<a class="menuItem active" href="dashboard.html">
+Dashboard
+</a>
+
+<a class="menuItem" href="order.html">
+New Order
+</a>
+
+<a class="menuItem" href="reports.html">
+Reports
+</a>
+
+<a class="menuItem" href="settings.html">
+Settings
+</a>
+
+</div>
+
+
+
+<!-- MAIN -->
+
+<div class="main">
+
+
+<div class="topbar">
+
+<div class="topbarTitle">
+Dashboard
+</div>
+
+<div class="topbarRight">
+Cloud Kitchen Panel
+</div>
+
+</div>
+
+
+
+<div class="content">
+
+
+<!-- FILTER -->
+
+<div class="card">
+
+<div class="formGroup">
+
+<div class="formLabel">
+Range
+</div>
+
+<select id="range" onchange="loadDash()">
+
+<option value="all">All</option>
+<option value="day">Today</option>
+<option value="week">Week</option>
+<option value="month">Month</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+
+<!-- STATS -->
+
+<div class="grid3">
+
+<div class="statCard">
+<div class="statLabel">Zomato</div>
+<div id="zOrders" class="statValue">0</div>
+<div id="zProfit" class="statSub">₹ 0</div>
+<div id="zMargin" class="statSub">0%</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Swiggy</div>
+<div id="sOrders" class="statValue">0</div>
+<div id="sProfit" class="statSub">₹ 0</div>
+<div id="sMargin" class="statSub">0%</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Best Platform</div>
+<div id="bestPlatform" class="statValue">-</div>
+<div id="bestDetail" class="statSub">-</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Orders</div>
+<div id="orders" class="statValue">0</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Total Profit</div>
+<div id="profit" class="statValue">0</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Average Profit</div>
+<div id="avg" class="statValue">0</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Revenue</div>
+<div id="sales" class="statValue">0</div>
+</div>
+
+</div>
+
+
+
+<!-- CHART -->
+
+<div class="card">
+
+<canvas id="profitChart"></canvas>
+
+</div>
+
+
+
+<div class="card">
+
+<canvas id="orderChart"></canvas>
+
+</div>
+
+<div class="card">
+
+<div class="cardTitle">Platform Comparison</div>
+
+<canvas id="platformChart"></canvas>
+
+</div>
+
+
+</div>
+</div>
+</div>
+
+
+
+<script>
+
+
+let profitChart
+let orderChart
+let platformChart
+
+function loadDash(){
+
+let orders=getData("orders")||[]
+
+let range=document.getElementById("range").value
+
+let now=Date.now()
+
+let totalProfit=0
+let totalOrders=0
+let totalSales = 0
+let zProfit=0, sProfit=0
+let zOrders=0, sOrders=0
+let zSales=0, sSales=0
+
+let days={}
+let orderDays={}
+let zomatoDays={}
+let swiggyDays={}
+
+orders.forEach(o=>{
+
+let ok=true
+//totalSales += o.billValue || 0
+
+if(range=="day"){
+
+if(now-o.date>86400000) ok=false
+
+}
+
+
+if(range=="week"){
+
+if(now-o.date>604800000) ok=false
+
+}
+
+
+if(range=="month"){
+
+if(now-o.date>2592000000) ok=false
+
+}
+
+
+if(ok){
+    
+    let sale = o.billValue || 0
+    totalSales += o.billValue || 0
+
+if(o.platform==="Zomato"){
+zOrders++
+zProfit += o.profit || 0
+zSales += sale
+}
+
+if(o.platform==="Swiggy"){
+sOrders++
+sProfit += o.profit || 0
+sSales += sale
+}
+
+
+totalOrders++
+
+let p=o.profit || 0
+
+totalProfit+=p
+
+let d=new Date(o.date).toLocaleDateString()
+
+if(!days[d]) days[d]=0
+if(!orderDays[d]) orderDays[d]=0
+
+days[d]+=p
+orderDays[d]++
+if(o.platform==="Zomato"){
+if(!zomatoDays[d]) zomatoDays[d]=0
+zomatoDays[d]+=p
+}
+
+if(o.platform==="Swiggy"){
+if(!swiggyDays[d]) swiggyDays[d]=0
+swiggyDays[d]+=p
+}
+}
+
+})
+
+let zMargin = zSales > 0 ? (zProfit / zSales) * 100 : 0
+let sMargin = sSales > 0 ? (sProfit / sSales) * 100 : 0
+
+let avg=0
+
+if(totalOrders>0){
+
+avg=totalProfit/totalOrders
+
+}
+
+
+document.getElementById("orders").innerText=totalOrders
+
+document.getElementById("profit").innerText="₹ " + totalProfit.toFixed(2)
+document.getElementById("avg").innerText="₹ " + avg.toFixed(2)
+document.getElementById("sales").innerText = "₹ " + totalSales.toFixed(2)
+document.getElementById("zOrders").innerText = zOrders
+document.getElementById("zProfit").innerText = "₹ " + zProfit.toFixed(2)
+document.getElementById("zMargin").innerText = zMargin.toFixed(1) + "%"
+document.getElementById("sOrders").innerText = sOrders
+document.getElementById("sProfit").innerText = "₹ " + sProfit.toFixed(2)
+document.getElementById("sMargin").innerText = sMargin.toFixed(1) + "%"
+
+let best = "-"
+let detail = "-"
+
+if(zProfit > sProfit){
+best = "Zomato"
+detail = "Higher Profit"
+}
+else if(sProfit > zProfit){
+best = "Swiggy"
+detail = "Higher Profit"
+}
+else{
+best = "Equal"
+detail = "Similar Performance"
+}
+document.getElementById("bestPlatform").innerText = best
+document.getElementById("bestDetail").innerText = detail
+if(totalOrders === 0){
+document.getElementById("bestPlatform").innerText = "-"
+document.getElementById("bestDetail").innerText = "No Data"
+}
+
+drawCharts(days,orderDays,zomatoDays,swiggyDays)
+
+}
+
+
+function drawCharts(days,orderDays,zomatoDays,swiggyDays){
+
+let labels=Object.keys(days).sort((a,b)=>new Date(a)-new Date(b))
+
+let profitValues=labels.map(d=>days[d])
+let orderValues=labels.map(d=>orderDays[d])
+
+
+if(profitChart) profitChart.destroy()
+if(orderChart) orderChart.destroy()
+
+
+profitChart=new Chart(
+
+document.getElementById("profitChart"),
+
+{
+
+type:"line",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+label:"Profit",
+data:profitValues,
+borderWidth:2,
+tension:0.3,
+fill:true
+}]
+
+}
+
+}
+
+)
+
+
+orderChart=new Chart(
+
+document.getElementById("orderChart"),
+
+{
+
+type:"bar",
+
+data:{
+
+labels:labels,
+
+datasets:[{
+
+label:"Orders",
+
+data:orderValues,
+
+borderWidth:2
+
+}]
+
+}
+
+}
+
+)
+
+let zomatoValues=labels.map(d=>zomatoDays[d] || 0)
+let swiggyValues=labels.map(d=>swiggyDays[d] || 0)
+
+if(platformChart) platformChart.destroy()
+
+platformChart=new Chart(
+document.getElementById("platformChart"),
+{
+type:"line",
+data:{
+labels:labels,
+datasets:[
+{
+label:"Zomato",
+data:zomatoValues,
+borderWidth:2,
+tension:0.3,
+borderColor:"#ef4444"
+},
+{
+label:"Swiggy",
+data:swiggyValues,
+borderWidth:2,
+tension:0.3,
+borderColor:"#f97316"
+}
+]
+}
+}
+)
+
+
+
+}
+
+
+loadDash()
+
+
+</script>
+
+
+</body>
+</html>

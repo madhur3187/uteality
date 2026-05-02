@@ -1,0 +1,35 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Inter',sans-serif;
+}
+
+body{
+color:#e2e8f0;
+
+}
+
+h1,h2,h3,h4{
+
+font-weight:600;
+
+}
+
+hr{
+
+border:none;
+border-top:1px solid #1e293b;
+margin:10px 0;
+
+}
+.statValue{
+  font-size:24px;
+  letter-spacing:0.5px;
+}
+
+.statLabel{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}

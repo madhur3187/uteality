@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>New Order</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/storage.js"></script>
+<script src="data/defaultMenu.js"></script>
+<script src="data/defaultPackaging.js"></script>
+<script src="data/defaultConfig.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="app">
+
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="logo">
+  <img src="assets/logo_transparent.png" alt="uTEAlity Logo">
+</div>
+
+<a class="menuItem" href="dashboard.html">Dashboard</a>
+<a class="menuItem active" href="order.html">New Order</a>
+<a class="menuItem" href="reports.html">Reports</a>
+<a class="menuItem" href="settings.html">Settings</a>
+
+</div>
+
+
+
+<div class="main">
+
+
+<div class="topbar">
+
+<div class="topbarTitle">New Order</div>
+<div class="topbarRight">Cloud Kitchen Panel</div>
+
+</div>
+
+
+
+<div class="content">
+
+<div class="grid">
+
+
+<!-- LEFT PANEL -->
+
+<div>
+
+
+<div class="card">
+
+<div class="cardTitle">Order</div>
+
+<input id="orderNo">
+
+<button onclick="setOrder()">Set</button>
+
+<div id="orderLabel"></div>
+
+</div>
+
+<div class="card">
+
+<div class="cardTitle">Order Date</div>
+
+<input type="date" id="orderDate">
+
+</div>
+
+<div class="card">
+
+<div class="cardTitle">Platform</div>
+
+<select id="platform">
+<option value="">Select Platform</option>
+<option value="Zomato">Zomato</option>
+<option value="Swiggy">Swiggy</option>
+</select>
+
+</div>
+
+<div class="card">
+
+<div class="cardTitle">Items</div>
+
+<select id="itemCount">
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+</select>
+
+<div id="itemsArea"></div>
+
+</div>
+
+
+
+<div class="card grid">
+
+<div>
+
+Commission %
+
+<input id="commission">
+
+</div>
+
+<div>
+
+Long Fee
+
+<input id="longFee">
+
+</div>
+
+</div>
+
+
+
+<div class="card">
+
+<div class="cardTitle">Packaging</div>
+
+<select id="packSelect">
+<option value="">Select Packaging</option>
+</select>
+
+<div id="selectedPack"></div>
+
+</div>
+
+</div>
+
+
+
+<!-- RIGHT PANEL -->
+
+<div>
+
+
+<div class="card">
+
+<div class="cardTitle">Summary</div>
+
+
+<div class="statCard">
+<div class="statLabel">Original Value</div>
+<div id="totalVal" class="statValue">0</div>
+</div>
+
+<div class="statCard">
+<div class="statLabel">Bill Value (after discount)</div>
+<input id="billValue" value="0">
+</div>
+
+<div class="statCard">
+<div class="statLabel">Commission</div>
+<div id="commVal" class="statValue">0</div>
+</div>
+
+
+<div class="statCard">
+<div class="statLabel">Packaging</div>
+<div id="packVal" class="statValue">0</div>
+</div>
+
+
+<div class="statCard">
+<div class="statLabel">Long Fee</div>
+<div id="longVal" class="statValue">0</div>
+</div>
+
+
+<div class="statCard">
+<div class="statLabel">Making Cost</div>
+<div id="makingVal" class="statValue">0</div>
+</div>
+
+
+<div id="profitBox" class="profitBox">
+Profit = 0
+</div>
+
+
+<button onclick="calc()">Calculate</button>
+<button onclick="saveOrder()">Save</button>
+
+</div>
+
+
+</div>
+
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+<script>
+
+
+let menu = getData("menu")
+
+if (!menu || !menu[0]?.cost) {
+  menu = defaultMenu
+  saveData("menu", defaultMenu)
+}
+let packaging=getData("pack")||defaultPackaging
+let config=getData("config")||defaultConfig
+// Set default date = today
+let today = new Date().toISOString().split("T")[0]
+document.getElementById("orderDate").value = today
+
+
+document.getElementById("commission").value=config.commission
+document.getElementById("longFee").value=config.longDistance
+
+
+
+document
+.getElementById("itemCount")
+.addEventListener("change",createItems)
+
+
+
+function setOrder(){
+
+let no=document.getElementById("orderNo").value
+
+document.getElementById("orderLabel").innerText="Order # "+no
+
+}
+
+
+
+function createItems(){
+
+let n=Number(document.getElementById("itemCount").value)
+
+let div=document.getElementById("itemsArea")
+
+div.innerHTML=""
+
+for(let i=0;i<n;i++){
+
+let s=document.createElement("select")
+
+menu.forEach((m,index)=>{
+
+let o=document.createElement("option")
+
+o.value = index
+o.text = m.name + " ₹" + m.price
+
+s.appendChild(o)
+
+})
+s.selectedIndex = 0
+div.appendChild(s)
+
+}
+
+}
+
+createItems()
+
+
+
+function calc(){
+
+let total=0
+let making=0
+let items=[]
+
+
+document
+.querySelectorAll("#itemsArea select")
+.forEach(s=>{
+
+let index = Number(s.value)
+let m = menu[index]
+
+if(m){
+
+total+=Number(m.price)
+making+=Number(m.cost||0)
+
+let found = items.find(x => x.name === m.name)
+
+if(found){
+  found.qty += 1
+}else{
+  items.push({
+    name: m.name,
+    qty: 1
+  })
+}
+
+}
+
+})
+
+
+let commP=Number(
+document.getElementById("commission").value
+)
+
+let longFee=Number(
+document.getElementById("longFee").value
+)
+let billInput = document.getElementById("billValue")
+
+// Auto-fill first
+if(!billInput.value || Number(billInput.value) === 0){
+  billInput.value = total.toFixed(2)
+}
+
+let billValue = Number(billInput.value)
+
+// Now calculate commission correctly
+let commAmt = billValue * commP / 100
+
+
+let pack=0
+
+selectedPackaging.forEach(p=>{
+
+pack+=p.price*p.qty
+
+})
+
+
+let profit=
+billValue
+-commAmt
+-pack
+-longFee
+-making
+
+
+
+document.getElementById("totalVal").innerText=total.toFixed(2)
+document.getElementById("commVal").innerText=commAmt.toFixed(2)
+document.getElementById("packVal").innerText=pack.toFixed(2)
+document.getElementById("longVal").innerText=longFee.toFixed(2)
+document.getElementById("makingVal").innerText=making.toFixed(2)
+
+
+let r=document.getElementById("profitBox")
+
+r.innerText="Profit = "+profit.toFixed(2)
+
+r.classList.remove("profitPositive")
+r.classList.remove("profitNegative")
+
+if(profit>=0){
+r.classList.add("profitPositive")
+}else{
+r.classList.add("profitNegative")
+}
+
+
+window.lastOrder={
+
+orderNo:document.getElementById("orderNo").value,
+
+platform: document.getElementById("platform").value,
+
+items:items,
+
+total:total,
+
+billValue:billValue,
+
+commission:commAmt,
+
+packaging:selectedPackaging,
+
+longFee:longFee,
+
+making:making,
+
+profit:profit
+
+}
+
+}
+
+
+
+function saveOrder(){
+
+if(!window.lastOrder){
+alert("Please calculate first")
+return
+}
+
+if(!window.lastOrder.platform){
+alert("Please select platform")
+return
+}
+
+
+
+let orders=getData("orders")||[]
+
+let selectedDate = document.getElementById("orderDate").value
+
+let now = new Date()
+
+let finalDate = new Date(selectedDate)
+
+finalDate.setHours(now.getHours())
+finalDate.setMinutes(now.getMinutes())
+
+window.lastOrder.date = finalDate.getTime()
+
+orders.push(window.lastOrder)
+
+saveData("orders",orders)
+
+alert("Saved")
+
+}
+
+
+
+let selectedPackaging = []
+
+function initPackaging(){
+
+let select=document.getElementById("packSelect")
+
+// reset first
+select.innerHTML = `<option value="">Select Packaging</option>`
+
+packaging.forEach((p,i)=>{
+
+let o=document.createElement("option")
+o.value=i
+o.text=p.name+" ₹"+p.price
+
+select.appendChild(o)
+
+})
+
+select.addEventListener("change",function(){
+
+let index=this.value
+
+if(index==="") return
+
+let p=packaging[index]
+
+let exists=selectedPackaging.find(x=>x.name===p.name)
+
+if(!exists){
+
+selectedPackaging.push({
+name:p.name,
+price:p.price,
+qty:1
+})
+
+renderPackaging()
+
+}
+
+this.value=""
+
+})
+
+}   
+
+initPackaging()
+
+
+
+function renderPackaging(){
+
+let div=document.getElementById("selectedPack")
+
+div.innerHTML=""
+
+selectedPackaging.forEach((p,i)=>{
+
+let row=document.createElement("div")
+row.className="checkboxItem"
+
+let name=document.createElement("span")
+name.innerText=p.name+" ₹"+p.price
+
+let qty=document.createElement("input")
+qty.type="number"
+qty.value=p.qty
+qty.min=1
+qty.style.width="50px"
+
+qty.oninput=function(){
+
+p.qty=Number(this.value)
+
+}
+
+let remove=document.createElement("button")
+remove.innerText="X"
+
+remove.onclick=function(){
+
+selectedPackaging.splice(i,1)
+renderPackaging()
+
+}
+
+row.appendChild(name)
+row.appendChild(qty)
+row.appendChild(remove)
+
+div.appendChild(row)
+
+})
+
+}
+
+</script>
+
+
+</body>
+</html>
