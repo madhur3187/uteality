@@ -4,28 +4,154 @@
     <title>Cloud Kitchen Backend</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme.css">
+    <script src="js/storage.js"></script>
 </head>
 
 <body>
 
-<div class="sidebar">
+<body>
 
-    <h2>Kitchen Panel</h2>
+<div class="app">
 
-    <a href="dashboard.html">Dashboard</a>
-    <a href="order.html">New Order</a>
-    <a href="reports.html">Reports</a>
-    <a href="settings.html">Settings</a>
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <div class="logo">
+            <img src="assets/logo_transparent.png" alt="uTEAlity Logo">
+        </div>
+
+        <a class="menuItem active" href="index.html">Home</a>
+        <a class="menuItem" href="dashboard.html">Dashboard</a>
+        <a class="menuItem" href="order.html">New Order</a>
+        <a class="menuItem" href="reports.html">Reports</a>
+        <a class="menuItem" href="settings.html">Settings</a>
+
+    </div>
+
+
+    <!-- Main -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+
+            <div class="topbarTitle">
+                Welcome to uTEAlity
+            </div>
+
+            <div class="topbarRight">
+                Cloud Kitchen Intelligence
+            </div>
+
+        </div>
+
+
+        <!-- Content -->
+        <div class="content">
+
+            <!-- Hero -->
+            <div class="card" style="padding:40px;">
+
+                <h1 style="font-size:42px; margin-bottom:10px;">
+                    Brew Your Reality ☕
+                </h1>
+
+                <p style="font-size:18px; opacity:0.8; max-width:700px;">
+                    Manage orders, track profit, monitor platforms, and grow your cloud kitchen with data-driven decisions.
+                </p>
+
+            </div>
+
+
+            <!-- Quick Cards -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:25px;">
+
+                <div class="card">
+                    <h3>Total Orders</h3>
+                    <h2 id="homeOrders">0</h2>
+                </div>
+
+                <div class="card">
+                    <h3>Total Profit</h3>
+                    <h2 id="homeProfit">₹0</h2>
+                </div>
+
+                <div class="card">
+                    <h3>Revenue</h3>
+                    <h2 id="homeRevenue">₹0</h2>
+                </div>
+
+            </div>
+
+
+            <!-- Quick Actions -->
+            <div class="card" style="margin-top:25px;">
+
+                <h2>Quick Actions</h2>
+
+                <div style="display:flex; gap:15px; margin-top:20px; flex-wrap:wrap;">
+
+                    <a class="quickBtn greenBtn" href="order.html">
+    <span>➕</span>
+    <div>
+        <small>Action</small><br>
+        New Order
+    </div>
+</a>
+
+<a class="quickBtn blueBtn" href="reports.html">
+    <span>📊</span>
+    <div>
+        <small>Insights</small><br>
+        View Reports
+    </div>
+</a>
+
+<a class="quickBtn redBtn" href="dashboard.html">
+    <span>📈</span>
+    <div>
+        <small>Analytics</small><br>
+        Dashboard
+    </div>
+</a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
-<div class="content">
+<script>
 
-    <h1>Welcome</h1>
+let orders = getData("orders") || []
 
-    <p>Select option from left</p>
+let totalOrders = orders.length
 
-</div>
+let totalProfit = 0
+let totalRevenue = 0
+
+orders.forEach(o=>{
+
+    totalProfit += Number(o.profit || 0)
+    totalRevenue += Number(o.billValue || 0)
+
+})
+
+document.getElementById("homeOrders").innerText = totalOrders
+
+document.getElementById("homeProfit").innerText =
+"₹" + totalProfit.toFixed(2)
+
+document.getElementById("homeRevenue").innerText =
+"₹" + totalRevenue.toFixed(2)
+
+</script>
+
+</body>
 
 </body>
 </html>
