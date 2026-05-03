@@ -9,7 +9,9 @@
 
 <link rel="stylesheet" href="css/style.css">
 
-<script src="js/storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -183,9 +185,20 @@ let profitChart
 let orderChart
 let platformChart
 
-function loadDash(){
 
-let orders=getData("orders")||[]
+async function loadDash(){
+
+let { data: orders, error } =
+await supabase
+.from("orders")
+.select("*")
+
+if(error){
+  alert(error.message)
+  return
+}
+
+orders = orders || []
 
 let range=document.getElementById("range").value
 
@@ -325,6 +338,9 @@ drawCharts(days,orderDays,zomatoDays,swiggyDays)
 
 
 function drawCharts(days,orderDays,zomatoDays,swiggyDays){
+  if(Object.keys(days).length === 0){
+  return
+}
 
 let labels=Object.keys(days).sort((a,b)=>new Date(a)-new Date(b))
 

@@ -4,10 +4,9 @@
     <title>Cloud Kitchen Backend</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme.css">
-    <script src="js/storage.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
 </head>
-
-<body>
 
 <body>
 
@@ -127,7 +126,19 @@
 
 <script>
 
-let orders = getData("orders") || []
+async function loadHome(){
+
+let { data: orders, error } =
+await supabase
+.from("orders")
+.select("*")
+
+if(error){
+  alert(error.message)
+  return
+}
+
+orders = orders || []
 
 let totalOrders = orders.length
 
@@ -136,8 +147,8 @@ let totalRevenue = 0
 
 orders.forEach(o=>{
 
-    totalProfit += Number(o.profit || 0)
-    totalRevenue += Number(o.billValue || 0)
+  totalProfit += Number(o.profit || 0)
+  totalRevenue += Number(o.billValue || 0)
 
 })
 
@@ -149,9 +160,10 @@ document.getElementById("homeProfit").innerText =
 document.getElementById("homeRevenue").innerText =
 "₹" + totalRevenue.toFixed(2)
 
+}
+
+loadHome()
+
 </script>
-
-</body>
-
 </body>
 </html>

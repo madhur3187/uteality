@@ -9,14 +9,15 @@
 
 <link rel="stylesheet" href="css/style.css">
 
-<script src="js/storage.js"></script>
-<script src="data/defaultMenu.js"></script>
-<script src="data/defaultPackaging.js"></script>
-<script src="data/defaultConfig.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body>  
 
 <div class="app">
 
@@ -216,21 +217,19 @@ Profit = 0
 <script>
 
 
-let menu = getData("menu")
+let menu = []
+let packaging = []
 
-if (!menu || !menu[0]?.cost) {
-  menu = defaultMenu
-  saveData("menu", defaultMenu)
+let config = {
+  commission: 0,
+  longDistance: 0
 }
-let packaging=getData("pack")||defaultPackaging
-let config=getData("config")||defaultConfig
+
 // Set default date = today
 let today = new Date().toISOString().split("T")[0]
 document.getElementById("orderDate").value = today
 
 
-document.getElementById("commission").value=config.commission
-document.getElementById("longFee").value=config.longDistance
 
 
 
@@ -238,7 +237,52 @@ document
 .getElementById("itemCount")
 .addEventListener("change",createItems)
 
+async function initOrderPage(){
 
+// SETTINGS
+let { data: settingsData } =
+await supabase
+.from("settings")
+.select("*")
+.limit(1)
+
+if(settingsData && settingsData[0]){
+
+  config.commission =
+  Number(settingsData[0].commission || 0)
+
+  config.longDistance =
+  Number(settingsData[0].long_distance || 0)
+
+}
+
+// MENU
+let { data: menuData } =
+await supabase
+.from("menu_items")
+.select("*")
+
+menu = menuData || []
+
+// PACKAGING
+let { data: packData } =
+await supabase
+.from("packaging")
+.select("*")
+
+packaging = packData || []
+
+// Update UI
+document.getElementById("commission").value =
+config.commission
+
+document.getElementById("longFee").value =
+config.longDistance
+
+createItems()
+initPackaging()
+
+}
 
 function setOrder(){
 
@@ -278,9 +322,6 @@ div.appendChild(s)
 }
 
 }
-
-createItems()
-
 
 
 function calc(){
@@ -405,7 +446,7 @@ profit:profit
 
 
 
-function saveOrder(){
+async function saveOrder(){
 
 if(!window.lastOrder){
 alert("Please calculate first")
@@ -417,25 +458,24 @@ alert("Please select platform")
 return
 }
 
-
-
-let orders=getData("orders")||[]
-
 let selectedDate = document.getElementById("orderDate").value
 
-let now = new Date()
+let order = {
+...window.lastOrder,
 
-let finalDate = new Date(selectedDate)
+date: new Date(selectedDate).getTime()
 
-finalDate.setHours(now.getHours())
-finalDate.setMinutes(now.getMinutes())
+}
 
-window.lastOrder.date = finalDate.getTime()
+let { error } =
+await supabase
+.from("orders")
+.insert([order])
 
-orders.push(window.lastOrder)
-
-saveData("orders",orders)
-
+if(error){
+  alert(error.message)
+  return
+}
 alert("Saved")
 
 }
@@ -447,6 +487,7 @@ let selectedPackaging = []
 function initPackaging(){
 
 let select=document.getElementById("packSelect")
+select.onchange = null
 
 // reset first
 select.innerHTML = `<option value="">Select Packaging</option>`
@@ -488,8 +529,6 @@ this.value=""
 })
 
 }   
-
-initPackaging()
 
 
 
@@ -538,7 +577,7 @@ div.appendChild(row)
 })
 
 }
-
+initOrderPage()
 </script>
 
 

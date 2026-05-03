@@ -9,7 +9,9 @@
 
 <link rel="stylesheet" href="css/style.css">
 
-<script src="js/storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
 
 <style>
 
@@ -165,9 +167,20 @@ Order Details
 <script>
 
 
-function loadTable(){
+async function loadTable(){
 
-let orders=getData("orders")||[]
+let { data: orders, error } =
+await supabase
+.from("orders")
+.select("*")
+
+if(error){
+  alert(error.message)
+  return
+}
+
+orders = orders || []
+
 
 orders.sort((a,b)=>b.date - a.date)
 
@@ -404,7 +417,19 @@ shownOrders++
 
 })
 if(shownOrders === 0){
-  return
+
+let tr = document.createElement("tr")
+
+tr.innerHTML = `
+<td colspan="10" style="text-align:center; padding:30px; opacity:0.7;">
+No orders found
+</td>
+`
+
+t.appendChild(tr)
+
+return
+
 }
 let totalRow = document.createElement("tr")
 totalRow.style.fontWeight = "600"
@@ -541,29 +566,34 @@ document.getElementById("modal").style.display="none"
 
 
 
-function deleteOrder(orderDate){
+async function deleteOrder(orderDate){
 
-let orders = getData("orders") || []
+let { error } =
+await supabase
+.from("orders")
+.delete()
+.eq("date", orderDate)
 
-orders = orders.filter(x => x.date !== orderDate)
-
-saveData("orders", orders)
+if(error){
+  alert(error.message)
+  return
+}
 
 loadTable()
 
 }
 
-let today = new Date().toISOString().split("T")[0]
+let today = new Date()
 
-// Set From Date
-if(!document.getElementById("fromDate").value){
-  document.getElementById("fromDate").value = today
-}
+let toDate = today.toISOString().split("T")[0]
 
-// Set To Date
-if(!document.getElementById("toDate").value){
-  document.getElementById("toDate").value = today
-}
+let from = new Date()
+from.setDate(from.getDate() - 30)
+
+let fromDate = from.toISOString().split("T")[0]
+
+document.getElementById("fromDate").value = fromDate
+document.getElementById("toDate").value = toDate
 
 loadTable()
 

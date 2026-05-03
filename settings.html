@@ -9,10 +9,9 @@
 
 <link rel="stylesheet" href="css/style.css">
 
-<script src="js/storage.js"></script>
-<script src="data/defaultMenu.js"></script>
-<script src="data/defaultPackaging.js"></script>
-<script src="data/defaultConfig.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
 
 </head>
 
@@ -27,7 +26,7 @@
 <div class="sidebar">
 
 <div class="logo">
-UTEALITY
+  <img src="assets/logo_transparent.png" alt="uTEAlity Logo">
 </div>
 
 <a class="menuItem" href="dashboard.html">
@@ -173,18 +172,62 @@ Save Packaging
 
 <script>
 
-
-let menu=getData("menu")||defaultMenu
-let pack=getData("pack")||defaultPackaging
-let config=getData("config")||defaultConfig
-
-
-document.getElementById("commission").value=config.commission
-document.getElementById("longFee").value=config.longDistance
+let menu = []
+let pack = []
+let config = {
+  commission: 0,
+  longDistance: 0
+}
 
 
+async function initSettings(){
 
-function saveConfig(){
+// SETTINGS
+let { data: settingsData } =
+await supabase
+.from("settings")
+.select("*")
+.limit(1)
+
+if(settingsData && settingsData[0]){
+
+  config.commission =
+  Number(settingsData[0].commission || 0)
+
+  config.longDistance =
+  Number(settingsData[0].long_distance || 0)
+
+}
+
+document.getElementById("commission").value =
+config.commission
+
+document.getElementById("longFee").value =
+config.longDistance
+
+
+// MENU
+let { data: menuData } =
+await supabase
+.from("menu_items")
+.select("*")
+
+menu = menuData || []
+
+
+// PACKAGING
+let { data: packData } =
+await supabase
+.from("packaging")
+.select("*")
+
+pack = packData || []
+loadMenu()
+loadPack()
+
+}
+
+async function saveConfig(){
 
 config.commission=
 Number(document.getElementById("commission").value)
@@ -192,7 +235,14 @@ Number(document.getElementById("commission").value)
 config.longDistance=
 Number(document.getElementById("longFee").value)
 
-saveData("config",config)
+
+await supabase
+.from("settings")
+.upsert([{
+  id: 1,
+  commission: config.commission,
+  long_distance: config.longDistance
+}])
 
 alert("Saved")
 
@@ -208,16 +258,26 @@ d.innerHTML=""
 
 menu.forEach(m=>{
 
-let n=document.createElement("input")
-n.value=m.name
+let n = document.createElement("input")
+n.value = m.name
+n.placeholder = "Item Name"
 
-let p=document.createElement("input")
-p.value=m.price
+let p = document.createElement("input")
+p.value = m.price
+p.placeholder = "Selling Price"
 
-d.appendChild(n)
-d.appendChild(p)
+let c = document.createElement("input")
+c.value = m.cost || 0
+c.placeholder = "Making Cost"
 
-d.appendChild(document.createElement("br"))
+let row = document.createElement("div")
+row.className = "menuRow"
+
+row.appendChild(n)
+row.appendChild(p)
+row.appendChild(c)
+
+d.appendChild(row)
 
 })
 
@@ -229,7 +289,11 @@ loadMenu()
 
 function addMenu(){
 
-menu.push({name:"Item",price:0})
+menu.push({
+  name: "Item",
+  price: 0,
+  cost: 0
+})
 
 loadMenu()
 
@@ -237,25 +301,34 @@ loadMenu()
 
 
 
-function saveMenu(){
+async function saveMenu(){
 
 let inputs=document
 .querySelectorAll("#menuArea input")
 
 menu=[]
 
-for(let i=0;i<inputs.length;i+=2){
+for(let i=0;i<inputs.length;i+=3){
 
 menu.push({
 
-name:inputs[i].value,
-price:Number(inputs[i+1].value)
+  name: inputs[i].value,
 
+  price: Number(inputs[i+1].value),
+
+  cost: Number(inputs[i+2].value)
 })
 
 }
 
-saveData("menu",menu)
+await supabase
+.from("menu_items")
+.delete()
+.neq("id", 0)
+
+await supabase
+.from("menu_items")
+.insert(menu)
 
 alert("Saved")
 
@@ -300,7 +373,7 @@ loadPack()
 
 
 
-function savePack(){
+async function savePack(){
 
 let inputs=document
 .querySelectorAll("#packArea input")
@@ -318,13 +391,20 @@ price:Number(inputs[i+1].value)
 
 }
 
-saveData("pack",pack)
+await supabase
+.from("packaging")
+.delete()
+.neq("id", 0)
+
+await supabase
+.from("packaging")
+.insert(pack)
 
 alert("Saved")
 
 }
 
-
+initSettings()
 </script>
 
 
