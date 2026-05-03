@@ -9,8 +9,8 @@
 
 <link rel="stylesheet" href="css/style.css">
 <script src="data/defaultMenu.js"></script>
-<script src="js/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
 
 </head>
 
@@ -341,6 +341,11 @@ menu.push({
 
 }
 
+await db
+.from("menu_items")
+.delete()
+.neq("id",0)
+
 let { error } =
 await db
 .from("menu_items")
@@ -441,6 +446,11 @@ price:Number(inputs[i+1].value)
 })
 
 }
+
+await db
+.from("packaging")
+.delete()
+.neq("id",0)
 
 let { error } =
 await db
