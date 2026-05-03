@@ -236,6 +236,7 @@ config.longDistance=
 Number(document.getElementById("longFee").value)
 
 
+let { error } =
 await supabase
 .from("settings")
 .upsert([{
@@ -243,6 +244,11 @@ await supabase
   commission: config.commission,
   long_distance: config.longDistance
 }])
+
+if(error){
+  alert(error.message)
+  return
+}
 
 alert("Saved")
 
@@ -320,14 +326,15 @@ menu.push({
 
 }
 
-await supabase
-.from("menu_items")
-.delete()
-.neq("id", 0)
-
+let { error } =
 await supabase
 .from("menu_items")
 .insert(menu)
+
+if(error){
+  alert(error.message)
+  return
+}
 
 alert("Saved")
 
@@ -387,14 +394,15 @@ price:Number(inputs[i+1].value)
 
 }
 
-await supabase
-.from("packaging")
-.delete()
-.neq("id", 0)
-
+let { error } =
 await supabase
 .from("packaging")
 .insert(pack)
+
+if(error){
+  alert(error.message)
+  return
+}
 
 alert("Saved")
 
