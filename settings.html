@@ -347,14 +347,14 @@ menu.push({
 }
 
 await db
-.from("packaging")
+.from("menu_items")
 .delete()
 .neq("id",0)
 
 let { error } =
 await db
-.from("packaging")
-.insert(pack)
+.from("menu_items")
+.insert(menu)
 
 if(error){
   alert(error.message)
