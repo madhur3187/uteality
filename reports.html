@@ -392,7 +392,7 @@ b.innerText="Delete"
 
 b.onclick=function(){
 if(confirm("Delete this order?")){
-deleteOrder(o.date)
+deleteOrder(o.id)
 }
 }
 
@@ -566,13 +566,13 @@ document.getElementById("modal").style.display="none"
 
 
 
-async function deleteOrder(orderDate){
+async function deleteOrder(orderId){
 
 let { error } =
 await db
 .from("orders")
 .delete()
-.eq("date", orderDate)
+.eq("id", orderId)
 
 if(error){
   alert(error.message)
