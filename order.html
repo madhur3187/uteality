@@ -316,7 +316,9 @@ o.text = m.name + " ₹" + m.price
 s.appendChild(o)
 
 })
-s.selectedIndex = 0
+if(menu.length > 0){
+  s.selectedIndex = 0
+}
 div.appendChild(s)
 
 }
@@ -502,7 +504,7 @@ select.appendChild(o)
 
 })
 
-select.addEventListener("change",function(){
+select.onchange = function(){
 
 let index=this.value
 
