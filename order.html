@@ -258,7 +258,7 @@ if(settingsData && settingsData[0]){
 
 // MENU
 let { data: menuData } =
-await supabase
+await db
 .from("menu_items")
 .select("*")
 
@@ -266,7 +266,7 @@ menu = menuData || []
 
 // PACKAGING
 let { data: packData } =
-await supabase
+await db
 .from("packaging")
 .select("*")
 
@@ -470,7 +470,7 @@ date: new Date(selectedDate).getTime()
 }
 
 let { error } =
-await supabase
+await db
 .from("orders")
 .insert([order])
 

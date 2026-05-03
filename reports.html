@@ -170,7 +170,7 @@ Order Details
 async function loadTable(){
 
 let { data: orders, error } =
-await supabase
+await db
 .from("orders")
 .select("*")
 
@@ -569,7 +569,7 @@ document.getElementById("modal").style.display="none"
 async function deleteOrder(orderDate){
 
 let { error } =
-await supabase
+await db
 .from("orders")
 .delete()
 .eq("date", orderDate)
