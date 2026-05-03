@@ -346,10 +346,15 @@ menu.push({
 
 }
 
-await db
+let { error: deleteError } = await db
 .from("menu_items")
 .delete()
 .neq("id",0)
+
+if(deleteError){
+  alert("Delete Error: " + deleteError.message)
+  return
+}
 
 let { error } =
 await db
