@@ -9,6 +9,7 @@
 
 <link rel="stylesheet" href="css/style.css">
 <script src="data/defaultMenu.js"></script>
+<script src="data/defaultMenu.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 
@@ -161,6 +162,10 @@ Add
 
 <button onclick="savePack()">
 Save Packaging
+</button>
+
+<button onclick="importDefaultPackaging()">
+Import Default Packaging
 </button>
 
 </div>
@@ -463,6 +468,35 @@ if(error){
 }
 
 alert("Saved")
+
+}
+
+async function importDefaultPackaging(){
+
+  if(typeof defaultPackaging === "undefined"){
+    alert("defaultPackaging.js not loaded")
+    return
+  }
+
+  await db
+  .from("packaging")
+  .delete()
+  .neq("id",0)
+
+  let { error } = await db
+  .from("packaging")
+  .insert(defaultPackaging)
+
+  if(error){
+    alert(error.message)
+    return
+  }
+
+  pack = [...defaultPackaging]
+
+  loadPack()
+
+  alert("Default packaging imported successfully")
 
 }
 
