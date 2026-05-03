@@ -225,7 +225,7 @@ menu = menuData || []
 
 // PACKAGING
 let { data: packData, error: packError } =
-await supabase
+await db
 .from("packaging")
 .select("*")
 
@@ -249,7 +249,7 @@ Number(document.getElementById("longFee").value)
 
 
 let { error } =
-await supabase
+await db
 .from("settings")
 .upsert([{
   id: 1,
@@ -339,7 +339,7 @@ menu.push({
 }
 
 let { error } =
-await supabase
+await db
 .from("menu_items")
 .insert(menu)
 
@@ -407,7 +407,7 @@ price:Number(inputs[i+1].value)
 }
 
 let { error } =
-await supabase
+await db
 .from("packaging")
 .insert(pack)
 
