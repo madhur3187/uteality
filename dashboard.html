@@ -189,7 +189,7 @@ let platformChart
 async function loadDash(){
 
 let { data: orders, error } =
-await supabase
+await db
 .from("orders")
 .select("*")
 

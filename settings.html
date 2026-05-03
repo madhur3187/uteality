@@ -184,7 +184,7 @@ async function initSettings(){
 
 // SETTINGS
 let { data: settingsData, error: settingsError } =
-await supabase
+await db
 .from("settings")
 .select("*")
 .limit(1)
@@ -212,7 +212,7 @@ config.longDistance
 
 // MENU
 let { data: menuData, error: menuError } =
-await supabase
+await db
 .from("menu_items")
 .select("*")
 

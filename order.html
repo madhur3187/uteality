@@ -241,7 +241,7 @@ async function initOrderPage(){
 
 // SETTINGS
 let { data: settingsData } =
-await supabase
+await db
 .from("settings")
 .select("*")
 .limit(1)
