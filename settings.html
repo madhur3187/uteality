@@ -183,11 +183,15 @@ let config = {
 async function initSettings(){
 
 // SETTINGS
-let { data: settingsData } =
+let { data: settingsData, error: settingsError } =
 await supabase
 .from("settings")
 .select("*")
 .limit(1)
+
+if(settingsError){
+  alert("Settings Error: " + settingsError.message)
+}
 
 if(settingsData && settingsData[0]){
 
@@ -207,19 +211,27 @@ config.longDistance
 
 
 // MENU
-let { data: menuData } =
+let { data: menuData, error: menuError } =
 await supabase
 .from("menu_items")
 .select("*")
+
+if(menuError){
+  alert("Menu Error: " + menuError.message)
+}
 
 menu = menuData || []
 
 
 // PACKAGING
-let { data: packData } =
+let { data: packData, error: packError } =
 await supabase
 .from("packaging")
 .select("*")
+
+if(packError){
+  alert("Packaging Error: " + packError.message)
+}
 
 pack = packData || []
 loadMenu()
