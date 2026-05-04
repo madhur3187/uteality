@@ -331,6 +331,24 @@ let keyword = this.value
 
 s.innerHTML = ""
 
+if(keyword === ""){
+
+menu.forEach((m,index)=>{
+
+let op=document.createElement("option")
+
+op.value = index
+
+op.innerText = m.name + " ₹" + m.price
+
+s.appendChild(op)
+
+})
+
+return
+
+}
+
 menu
 .filter(m =>
 
