@@ -183,3 +183,14 @@ margin-bottom:12px;
 align-items:center;
 
 }
+.itemSearchRow{
+
+display:flex;
+
+flex-direction:column;
+
+gap:6px;
+
+margin-bottom:12px;
+
+}

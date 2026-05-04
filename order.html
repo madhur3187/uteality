@@ -306,6 +306,12 @@ for(let i=0;i<n;i++){
 
 let s=document.createElement("select")
 
+let search = document.createElement("input")
+
+search.placeholder = "Search item..."
+
+search.className = "searchBox"
+
 menu.forEach((m,index)=>{
 
 let o=document.createElement("option")
@@ -316,10 +322,53 @@ o.text = m.name + " ₹" + m.price
 s.appendChild(o)
 
 })
+
+search.oninput = function(){
+
+let keyword = this.value
+.toLowerCase()
+.trim()
+
+s.innerHTML = ""
+
+menu
+.filter(m =>
+
+m.name
+.toLowerCase()
+.includes(keyword)
+
+)
+.forEach(m=>{
+
+let op=document.createElement("option")
+
+op.value = menu.indexOf(m)
+
+op.innerText=m.name
+
+s.appendChild(op)
+
+})
+
+if(s.options.length > 0){
+  s.selectedIndex = 0
+}
+
+}
+
 if(menu.length > 0){
   s.selectedIndex = 0
 }
-div.appendChild(s)
+let row = document.createElement("div")
+
+row.className = "itemSearchRow"
+
+row.appendChild(search)
+
+row.appendChild(s)
+
+div.appendChild(row)
 
 }
 
