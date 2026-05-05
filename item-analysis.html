@@ -204,13 +204,14 @@ Number(menuItem?.price || 0)
 stats[name].revenue +=
 (price * qty)
 
-let itemCount =
-(order.items || []).length
+let cost =
+Number(menuItem?.cost || 0)
+
+let itemProfit =
+(price - cost) * qty
 
 stats[name].profit +=
-Number(order.profit || 0)
-/ itemCount
-
+itemProfit
 
 
 })
