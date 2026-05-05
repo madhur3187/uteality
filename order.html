@@ -313,6 +313,17 @@ for(let i=0;i<n;i++){
 
 let s=document.createElement("select")
 
+let defaultOption =
+
+document.createElement("option")
+
+defaultOption.value = ""
+
+defaultOption.innerText =
+"Select Item"
+
+s.appendChild(defaultOption)
+
 let search = document.createElement("input")
 
 search.placeholder = "Search item..."
@@ -337,6 +348,17 @@ let keyword = this.value
 .trim()
 
 s.innerHTML = ""
+
+let defaultOption =
+
+document.createElement("option")
+
+defaultOption.value = ""
+
+defaultOption.innerText =
+"Select Item"
+
+s.appendChild(defaultOption)
 
 if(keyword === ""){
 
@@ -379,12 +401,14 @@ s.appendChild(op)
 if(s.options.length > 0){
   s.selectedIndex = 0
 }
+s.onchange = function(){
+
+autoSelectPackaging()
 
 }
 
-if(menu.length > 0){
-  s.selectedIndex = 0
 }
+
 let row = document.createElement("div")
 
 row.className = "itemSearchRow"
@@ -399,6 +423,71 @@ div.appendChild(row)
 
 }
 
+function autoSelectPackaging(){
+
+selectedPackaging = []
+
+
+// Check selected items
+
+document
+.querySelectorAll("#itemsArea select")
+
+.forEach(s=>{
+
+let itemIndex =
+Number(s.value)
+
+let item =
+menu[itemIndex]
+
+if(!item) return
+
+
+(item.default_packaging || [])
+
+.forEach(packName=>{
+
+let packItem =
+
+packaging.find(p =>
+
+p.name === packName
+
+)
+
+if(!packItem) return
+
+
+let exists =
+
+selectedPackaging.find(x =>
+
+x.name === packItem.name
+
+)
+
+if(!exists){
+
+selectedPackaging.push({
+
+name: packItem.name,
+
+price: Number(packItem.price),
+
+qty: 1
+
+})
+
+}
+
+})
+
+})
+
+renderPackaging()
+
+}
 
 function calc(){
 
