@@ -129,7 +129,7 @@
 async function loadHome(){
 
 let { data: orders, error } =
-await supabase
+await db
 .from("orders")
 .select("*")
 
@@ -139,6 +139,27 @@ if(error){
 }
 
 orders = orders || []
+
+let today = new Date()
+
+today.setHours(0,0,0,0)
+
+let startOfDay =
+today.getTime()
+
+let endOfDay =
+startOfDay + 86400000
+
+
+orders = orders.filter(o =>
+
+Number(o.date) >= startOfDay
+
+&&
+
+Number(o.date) < endOfDay
+
+)
 
 let totalOrders = orders.length
 
