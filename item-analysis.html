@@ -257,6 +257,91 @@ body.innerHTML += `
 
 })
 
+
+
+// SUMMARY CARDS
+
+let bestSeller = ""
+
+let bestSellerQty = 0
+
+let bestProfit = ""
+
+let bestProfitValue = -999999
+
+let worstMargin = ""
+
+let worstMarginValue = 999999
+
+
+Object.keys(stats).forEach(name=>{
+
+let row = stats[name]
+
+let margin = 0
+
+if(row.revenue > 0){
+
+margin =
+(row.profit / row.revenue) * 100
+
+}
+
+
+// Best Seller
+if(row.qty > bestSellerQty){
+
+bestSellerQty = row.qty
+
+bestSeller = name
+
+}
+
+
+// Highest Profit
+if(row.profit > bestProfitValue){
+
+bestProfitValue = row.profit
+
+bestProfit = name
+
+}
+
+
+// Worst Margin
+if(margin < worstMarginValue){
+
+worstMarginValue = margin
+
+worstMargin = name
+
+}
+
+})
+
+
+// Update UI
+
+document
+.getElementById("bestSeller")
+.innerText =
+
+bestSeller + " (" + bestSellerQty + ")"
+
+
+document
+.getElementById("bestProfit")
+.innerText =
+
+bestProfit + " ₹" + bestProfitValue.toFixed(0)
+
+
+document
+.getElementById("worstMargin")
+.innerText =
+
+worstMargin + " " + worstMarginValue.toFixed(1) + "%"
+
 }
 
 loadAnalysis()
