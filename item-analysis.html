@@ -144,6 +144,8 @@ cursor:pointer;
 
 <th>Margin %</th>
 
+<th>Pricing Advice</th>
+
 </tr>
 
 </thead>
@@ -300,6 +302,26 @@ row.revenue > 0
 
 0
 
+let advice = ""
+
+if(margin < 15){
+
+advice = "Increase ₹20"
+
+}
+
+else if(margin < 30){
+
+advice = "Good"
+
+}
+
+else{
+
+advice = "Strong"
+
+}
+
 body.innerHTML += `
 
 <tr>
@@ -313,6 +335,8 @@ body.innerHTML += `
 <td>₹ ${row.profit.toFixed(2)}</td>
 
 <td>${margin.toFixed(1)}%</td>
+
+<td>${advice}</td>
 
 </tr>
 
