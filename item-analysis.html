@@ -306,7 +306,11 @@ let advice = ""
 
 if(margin < 15){
 
-advice = "Increase ₹20"
+let suggested =
+Math.round(row.revenue / row.qty * 1.10)
+
+advice =
+"Try ₹" + suggested
 
 }
 
@@ -361,7 +365,18 @@ let worstMargin = ""
 let worstMarginValue = 999999
 
 
-Object.keys(stats).forEach(name=>{
+Object
+.keys(stats)
+
+.sort((a,b)=>
+
+stats[b].profit
+-
+stats[a].profit
+
+)
+
+.forEach(name=>{
 
 let row = stats[name]
 
