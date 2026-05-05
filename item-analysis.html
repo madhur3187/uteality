@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Item Profit Analyzer</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="js/supabase.js"></script>
+
+<style>
+
+.modal{
+
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+
+background:rgba(0,0,0,0.6);
+
+display:none;
+
+align-items:center;
+justify-content:center;
+
+}
+
+.modalBox{
+
+background:#020617;
+
+border:1px solid #1e293b;
+
+padding:20px;
+
+border-radius:12px;
+
+width:400px;
+
+}
+
+.modalTitle{
+
+font-weight:600;
+margin-bottom:10px;
+
+}
+
+.closeBtn{
+
+float:right;
+cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+<div class="app">
+
+
+<div class="sidebar">
+
+<div class="logo">
+  <img src="assets/logo_transparent.png" alt="uTEAlity Logo">
+</div>
+
+<a class="menuItem" href="dashboard.html">Dashboard</a>
+<a class="menuItem" href="order.html">New Order</a>
+<a class="menuItem" href="reports.html">Reports</a>
+<a class="menuItem active" href="item-analysis.html">Item Analysis</a>
+<a class="menuItem" href="settings.html">Settings</a>
+
+</div>
+
+
+
+<div class="main">
+
+
+<div class="topbar">
+
+<div class="topbarTitle">Item Profit Analyzer</div>
+<div class="topbarRight">Cloud Kitchen Panel</div>
+
+</div>
+
+
+
+<div class="content">
+
+<table class="reportTable">
+
+<thead>
+
+<tr>
+
+<th>Item</th>
+
+<th>Qty Sold</th>
+
+<th>Revenue</th>
+
+<th>Profit</th>
+
+<th>Margin %</th>
+
+</tr>
+
+</thead>
+
+<tbody id="analysisBody"></tbody>
+
+</table>
+</div>
+</div>
+
+<script>
+
+async function loadAnalysis(){
+
+let { data: orders } =
+await db
+.from("orders")
+.select("*")
+
+let { data: menu } =
+await db
+.from("menu_items")
+.select("*")
+
+let stats = {}
+
+orders.forEach(order=>{
+
+(order.items || []).forEach(item=>{
+
+let name = item.name
+
+let qty = Number(item.qty || 1)
+
+if(!stats[name]){
+
+stats[name] = {
+
+qty:0,
+
+revenue:0,
+
+profit:0
+
+}
+
+}
+
+stats[name].qty += qty
+
+
+let menuItem =
+menu.find(m => m.name === name)
+
+let price =
+Number(menuItem?.price || 0)
+
+stats[name].revenue +=
+(price * qty)
+
+stats[name].profit +=
+Number(order.profit || 0)
+
+)
+
+})
+
+})
+
+let body =
+document.getElementById("analysisBody")
+
+body.innerHTML = ""
+
+Object.keys(stats).forEach(name=>{
+
+let row = stats[name]
+
+let margin =
+row.revenue > 0
+
+?
+
+(row.profit / row.revenue * 100)
+
+:
+
+0
+
+body.innerHTML += `
+
+<tr>
+
+<td>${name}</td>
+
+<td>${row.qty}</td>
+
+<td>₹ ${row.revenue.toFixed(2)}</td>
+
+<td>₹ ${row.profit.toFixed(2)}</td>
+
+<td>${margin.toFixed(1)}%</td>
+
+</tr>
+
+`
+
+})
+
+}
+
+loadAnalysis()
+
+</script>
+
+</body>
+</html>
