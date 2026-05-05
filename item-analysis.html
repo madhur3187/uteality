@@ -100,6 +100,34 @@ cursor:pointer;
 
 <div class="content">
 
+<div class="statsGrid">
+
+<div class="statCard">
+
+<div>Best Seller</div>
+
+<div id="bestSeller">-</div>
+
+</div>
+
+<div class="statCard">
+
+<div>Highest Profit</div>
+
+<div id="bestProfit">-</div>
+
+</div>
+
+<div class="statCard">
+
+<div>Lowest Margin</div>
+
+<div id="worstMargin">-</div>
+
+</div>
+
+</div>
+
 <table class="reportTable">
 
 <thead>
@@ -176,8 +204,12 @@ Number(menuItem?.price || 0)
 stats[name].revenue +=
 (price * qty)
 
+let itemCount =
+(order.items || []).length
+
 stats[name].profit +=
 Number(order.profit || 0)
+/ itemCount
 
 
 
