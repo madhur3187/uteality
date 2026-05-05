@@ -300,12 +300,23 @@ let c = document.createElement("input")
 c.value = m.cost || 0
 c.placeholder = "Making Cost"
 
+let dp = document.createElement("input")
+
+dp.placeholder = "Container,Spoon"
+
+dp.value =
+
+(m.default_packaging || [])
+
+.join(",")
+
 let row = document.createElement("div")
 row.className = "menuRow"
 
 row.appendChild(n)
 row.appendChild(p)
 row.appendChild(c)
+row.appendChild(dp)
 
 d.appendChild(row)
 
@@ -321,7 +332,10 @@ function addMenu(){
 menu.push({
   name: "Item",
   price: 0,
-  cost: 0
+  cost: 0,
+
+  default_packaging: []
+
 })
 
 loadMenu()
@@ -337,7 +351,7 @@ let inputs=document
 
 menu=[]
 
-for(let i=0;i<inputs.length;i+=3){
+for(let i=0;i<inputs.length;i+=4){
 
 menu.push({
 
@@ -345,7 +359,18 @@ menu.push({
 
   price: Number(inputs[i+1].value),
 
-  cost: Number(inputs[i+2].value)
+  cost: Number(inputs[i+2].value),
+
+  default_packaging:
+
+  inputs[i+3]
+  .value
+  .split(",")
+
+  .map(x => x.trim())
+
+  .filter(x => x)
+
 })
 
 }
@@ -386,7 +411,9 @@ async function importDefaultMenu(){
   let data = defaultMenu.map(item => ({
     name: item.name,
     price: Number(item.price || 0),
-    cost: Number(item.cost || 0)
+    cost: Number(item.cost || 0),
+    default_packaging:
+    item.default_packaging || []
   }))
 
   await db
