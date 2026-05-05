@@ -207,8 +207,70 @@ stats[name].revenue +=
 let cost =
 Number(menuItem?.cost || 0)
 
+let itemRevenue =
+price * qty
+
+
+// ORDER LEVEL TOTALS
+
+let orderRevenue =
+Number(order.total || 0)
+
+let orderCommission =
+Number(order.commission || 0)
+
+
+// Packaging total
+
+let orderPackaging = 0
+
+if(Array.isArray(order.packaging)){
+
+order.packaging.forEach(p=>{
+
+orderPackaging +=
+Number(p.price || 0)
+*
+Number(p.qty || 0)
+
+})
+
+}
+
+
+// Item share %
+
+let share = 0
+
+if(orderRevenue > 0){
+
+share =
+itemRevenue / orderRevenue
+
+}
+
+
+// Allocate deductions
+
+let itemCommission =
+orderCommission * share
+
+let itemPackaging =
+orderPackaging * share
+
+
+// Final net profit
+
 let itemProfit =
-(price - cost) * qty
+
+itemRevenue
+-
+(cost * qty)
+-
+itemCommission
+-
+itemPackaging
+
 
 stats[name].profit +=
 itemProfit
