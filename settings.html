@@ -403,6 +403,18 @@ initSettings()
 
 async function importDefaultMenu(){
 
+let ok = confirm(
+
+"This will replace all existing menu items.\n\nContinue?"
+
+)
+
+if(!ok){
+
+return
+
+}
+
   if(typeof defaultMenu === "undefined"){
     alert("defaultMenu.js not loaded")
     return
@@ -510,6 +522,18 @@ alert("Saved")
 }
 
 async function importDefaultPackaging(){
+
+let ok = confirm(
+
+"This will replace all existing packaging items.\n\nContinue?"
+
+)
+
+if(!ok){
+
+return
+
+}
 
   if(typeof defaultPackaging === "undefined"){
     alert("defaultPackaging.js not loaded")
