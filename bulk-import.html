@@ -3,6 +3,9 @@
 
 <head>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+
 <meta charset="UTF-8">
 
 <meta name="viewport"
@@ -315,13 +318,47 @@ Unknown Items
 ===================================================== */
 
 let importedOrders = [];
+let menu = [];
 
+/* =====================================================
+   MENU DATA
+===================================================== */
+async function loadMenu() {
+
+    const { data, error } = await db
+        .from("menu_items")
+        .select("id,name,price,cost,default_packaging");
+
+    if (error) {
+
+        console.error(
+            "Error loading menu:",
+            error
+        );
+
+        showMessage(
+            "Could not load menu items: " + error.message,
+            true
+        );
+
+        return false;
+    }
+
+    menu = data || [];
+
+    console.log(
+        "Menu items loaded:",
+        menu.length
+    );
+
+    return true;
+}
 
 /* =====================================================
    READ ORDER FILE
 ===================================================== */
 
-function readOrderFile() {
+async function readOrderFile() {
 
     const fileInput =
         document.getElementById("orderFile");
@@ -335,6 +372,11 @@ function readOrderFile() {
 
         return;
 
+    }
+    const menuLoaded = await loadMenu();
+
+    if (!menuLoaded) {
+        return;
     }
 
 
