@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Bulk Order Import</title>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f7f7f7;
+    color: #222;
+}
+
+header {
+    background: #222;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.upload-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+select,
+input[type="file"],
+button {
+    padding: 10px;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #222;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.summary {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.summary-box {
+    background: #f1f1f1;
+    padding: 15px 20px;
+    border-radius: 8px;
+    min-width: 130px;
+}
+
+.summary-box strong {
+    display: block;
+    font-size: 22px;
+    margin-top: 5px;
+}
+
+#message {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 9px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+th {
+    background: #f1f1f1;
+}
+
+.hidden {
+    display: none;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<h1>uTEAlity — Bulk Order Import</h1>
+
+<a href="index.html"
+   style="color:white;text-decoration:none;">
+   Dashboard
+</a>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- Upload Section -->
+
+<div class="card">
+
+<h2>Upload Order Report</h2>
+
+<div class="upload-row">
+
+<select id="platform">
+
+<option value="zomato">
+Zomato
+</option>
+
+<option value="swiggy">
+Swiggy
+</option>
+
+</select>
+
+
+<input
+    type="file"
+    id="orderFile"
+    accept=".csv"
+>
+
+
+<button
+    type="button"
+    onclick="readOrderFile()">
+
+Analyze File
+
+</button>
+
+</div>
+
+
+<div id="message"></div>
+
+</div>
+
+
+
+<!-- Summary -->
+
+<div
+    id="summarySection"
+    class="card hidden">
+
+<h2>Import Summary</h2>
+
+<div class="summary">
+
+
+<div class="summary-box">
+
+Orders Found
+
+<strong id="ordersFound">
+0
+</strong>
+
+</div>
+
+
+<div class="summary-box">
+
+Delivered
+
+<strong id="deliveredOrders">
+0
+</strong>
+
+</div>
+
+
+<div class="summary-box">
+
+Cancelled
+
+<strong id="cancelledOrders">
+0
+</strong>
+
+</div>
+
+
+<div class="summary-box">
+
+Unknown Items
+
+<strong id="unknownItems">
+0
+</strong>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<!-- Orders -->
+
+<div
+    id="ordersSection"
+    class="card hidden">
+
+<h2>Orders Found</h2>
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Order ID</th>
+
+<th>Date / Time</th>
+
+<th>Status</th>
+
+<th>Items</th>
+
+<th>Subtotal</th>
+
+<th>Discount</th>
+
+<th>Packaging</th>
+
+<th>Total</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="ordersTableBody">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+/* =====================================================
+   GLOBAL DATA
+===================================================== */
+
+let importedOrders = [];
+
+
+/* =====================================================
+   READ ORDER FILE
+===================================================== */
+
+function readOrderFile() {
+
+    const fileInput =
+        document.getElementById("orderFile");
+
+    const file = fileInput.files[0];
+
+
+    if (!file) {
+
+        alert("Please select a CSV file first.");
+
+        return;
+
+    }
+
+
+    const platform =
+        document.getElementById("platform").value;
+
+
+    if (platform !== "zomato") {
+
+        alert(
+            "Swiggy importer is not built yet. We will add it after Zomato is working."
+        );
+
+        return;
+
+    }
+
+
+    const reader = new FileReader();
+
+
+    reader.onload = function(event) {
+
+        try {
+
+            const csvText =
+                event.target.result;
+
+
+            parseZomatoCSV(csvText);
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                "Error reading file: " + error.message,
+                true
+            );
+
+        }
+
+    };
+
+
+    reader.readAsText(file);
+
+}
+
+
+
+/* =====================================================
+   CSV PARSER
+===================================================== */
+
+function parseCSVLine(line) {
+
+    const result = [];
+
+    let current = "";
+
+    let insideQuotes = false;
+
+
+    for (let i = 0; i < line.length; i++) {
+
+        const char = line[i];
+
+        const nextChar =
+            line[i + 1];
+
+
+        if (char === '"' && insideQuotes && nextChar === '"') {
+
+            current += '"';
+
+            i++;
+
+            continue;
+
+        }
+
+
+        if (char === '"') {
+
+            insideQuotes = !insideQuotes;
+
+            continue;
+
+        }
+
+
+        if (char === "," && !insideQuotes) {
+
+            result.push(current);
+
+            current = "";
+
+            continue;
+
+        }
+
+
+        current += char;
+
+    }
+
+
+    result.push(current);
+
+
+    return result;
+
+}
+
+
+
+/* =====================================================
+   PARSE ZOMATO CSV
+===================================================== */
+
+function parseZomatoCSV(csvText) {
+
+    const lines =
+        csvText
+            .replace(/\r/g, "")
+            .split("\n")
+            .filter(line => line.trim() !== "");
+
+
+    if (lines.length < 2) {
+
+        throw new Error(
+            "The CSV file does not contain any order data."
+        );
+
+    }
+
+
+    const headers =
+        parseCSVLine(lines[0])
+            .map(header => header.trim());
+
+
+    console.log("Zomato headers:", headers);
+
+
+    importedOrders = [];
+
+
+    for (let i = 1; i < lines.length; i++) {
+
+        const values =
+            parseCSVLine(lines[i]);
+
+
+        if (values.length !== headers.length) {
+
+            console.warn(
+                "Skipping malformed row:",
+                i + 1,
+                values
+            );
+
+            continue;
+
+        }
+
+
+        const row = {};
+
+
+        headers.forEach((header, index) => {
+
+            row[header] =
+                values[index]?.trim() || "";
+
+        });
+
+
+        importedOrders.push(row);
+
+    }
+
+
+    console.log(
+        "Imported Zomato rows:",
+        importedOrders
+    );
+
+
+    displayOrders();
+
+}
+
+
+
+/* =====================================================
+   DISPLAY ORDERS
+===================================================== */
+
+function displayOrders() {
+
+    const tbody =
+        document.getElementById(
+            "ordersTableBody"
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    let delivered = 0;
+
+    let cancelled = 0;
+
+    let unknownItems = 0;
+
+
+    importedOrders.forEach(order => {
+
+        const status =
+            order["Order Status"] || "";
+
+
+        if (
+            status.toLowerCase() ===
+            "delivered"
+        ) {
+
+            delivered++;
+
+        }
+
+
+        if (
+            status.toLowerCase().includes(
+                "cancel"
+            )
+        ) {
+
+            cancelled++;
+
+        }
+
+
+        const tr =
+            document.createElement("tr");
+
+
+        tr.innerHTML = `
+
+            <td>
+                ${escapeHTML(order["Order ID"])}
+            </td>
+
+            <td>
+                ${escapeHTML(order["Order Placed At"])}
+            </td>
+
+            <td>
+                ${escapeHTML(order["Order Status"])}
+            </td>
+
+            <td>
+                ${escapeHTML(order["Items in order"])}
+            </td>
+
+            <td>
+                ₹${formatNumber(order["Bill subtotal"])}
+            </td>
+
+            <td>
+                ₹${formatNumber(
+                    calculateDiscount(order)
+                )}
+            </td>
+
+            <td>
+                ₹${formatNumber(
+                    order["Packaging charges"]
+                )}
+            </td>
+
+            <td>
+                ₹${formatNumber(order["Total"])}
+            </td>
+
+        `;
+
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    document.getElementById(
+        "ordersFound"
+    ).innerText =
+        importedOrders.length;
+
+
+    document.getElementById(
+        "deliveredOrders"
+    ).innerText =
+        delivered;
+
+
+    document.getElementById(
+        "cancelledOrders"
+    ).innerText =
+        cancelled;
+
+
+    document.getElementById(
+        "unknownItems"
+    ).innerText =
+        unknownItems;
+
+
+    document.getElementById(
+        "summarySection"
+    ).classList.remove("hidden");
+
+
+    document.getElementById(
+        "ordersSection"
+    ).classList.remove("hidden");
+
+
+    showMessage(
+        `Successfully read ${importedOrders.length} orders.`
+    );
+
+}
+
+
+
+/* =====================================================
+   DISCOUNT CALCULATION
+===================================================== */
+
+function calculateDiscount(order) {
+
+    const promo =
+        Number(
+            order[
+                "Restaurant discount (Promo)"
+            ]
+        ) || 0;
+
+
+    const flat =
+        Number(
+            order[
+                "Restaurant discount (Flat offs, Freebies & others)"
+            ]
+        ) || 0;
+
+
+    const gold =
+        Number(
+            order["Gold discount"]
+        ) || 0;
+
+
+    const brand =
+        Number(
+            order["Brand pack discount"]
+        ) || 0;
+
+
+    return promo + flat + gold + brand;
+
+}
+
+
+
+/* =====================================================
+   NUMBER FORMAT
+===================================================== */
+
+function formatNumber(value) {
+
+    const number =
+        Number(value);
+
+
+    if (isNaN(number)) {
+
+        return "0.00";
+
+    }
+
+
+    return number.toFixed(2);
+
+}
+
+
+
+/* =====================================================
+   HTML SAFETY
+===================================================== */
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+
+/* =====================================================
+   MESSAGE
+===================================================== */
+
+function showMessage(message, isError = false) {
+
+    const element =
+        document.getElementById("message");
+
+
+    element.innerText =
+        message;
+
+
+    element.style.color =
+        isError ? "red" : "green";
+
+}
+
+</script>
+
+
+</body>
+
+</html>
