@@ -560,11 +560,20 @@ function parseZomatoCSV(csvText) {
 
         importedOrders.push(row);
 
-        if (importedOrders.length <= 5) {
+       if (importedOrders.length <= 5) {
+
+    const parsedItems =
+        parseOrderItems(row["Items in order"]);
+
+    const matchedItems =
+        parsedItems.map(item => ({
+            ...item,
+            ...matchMenuItem(item.name)
+        }));
 
     console.log(
-        "Parsed items:",
-        parseOrderItems(row["Items in order"])
+        "Parsed + Matched items:",
+        matchedItems
     );
 
 }
@@ -656,6 +665,44 @@ function parseOrderItems(itemsText) {
     });
 
     return items;
+}
+
+/* =====================================================
+   MATCH ITEMS WITH SUPABASE MENU
+===================================================== */
+
+function matchMenuItem(itemName) {
+
+    const normalizedName =
+        itemName
+            .trim()
+            .toLowerCase();
+
+    const matched =
+        menu.find(item =>
+            item.name
+                .trim()
+                .toLowerCase() === normalizedName
+        );
+
+    if (!matched) {
+
+        return {
+            matched: false,
+            importedName: itemName
+        };
+
+    }
+
+    return {
+        matched: true,
+        importedName: itemName,
+        menuId: matched.id,
+        menuName: matched.name,
+        sellingPrice: Number(matched.price) || 0,
+        makingCost: Number(matched.cost) || 0,
+        defaultPackaging: matched.default_packaging || []
+    };
 }
 
 /* =====================================================
