@@ -558,28 +558,31 @@ function displayOrders() {
     importedOrders.forEach(order => {
 
         const status =
-            order["Order Status"] || "";
+    (order["Order Status"] || "")
+        .toLowerCase()
+        .trim();
+
+const cancellationReason =
+    (order["Cancellation / Rejection reason"] || "")
+        .toLowerCase()
+        .trim();
 
 
-        if (
-            status.toLowerCase() ===
-            "delivered"
-        ) {
+if (status === "delivered") {
 
-            delivered++;
+    delivered++;
 
-        }
+}
 
 
-        if (
-            status.toLowerCase().includes(
-                "cancel"
-            )
-        ) {
+if (
+    status.includes("cancel") ||
+    cancellationReason.includes("cancel")
+) {
 
-            cancelled++;
+    cancelled++;
 
-        }
+}
 
 
         const tr =
