@@ -571,10 +571,22 @@ function parseZomatoCSV(csvText) {
             ...matchMenuItem(item.name)
         }));
 
+if (importedOrders.length <= 5) {
+
+    const financials =
+        calculateImportedOrder(row);
+
     console.log(
-        "Parsed + Matched items:",
-        matchedItems
+        "ORDER FINANCIALS:",
+        {
+            orderId: row["Order ID"],
+            items: financials.items,
+            makingCost: financials.makingCost,
+            unknownItems: financials.unknownItems
+        }
     );
+
+}
 
 }
 
@@ -702,6 +714,102 @@ function matchMenuItem(itemName) {
         sellingPrice: Number(matched.price) || 0,
         makingCost: Number(matched.cost) || 0,
         defaultPackaging: matched.default_packaging || []
+    };
+}
+
+/* =====================================================
+   CALCULATE IMPORTED ORDER FINANCIALS
+===================================================== */
+
+function calculateImportedOrder(order) {
+
+    const parsedItems =
+        parseOrderItems(order["Items in order"]);
+
+    let makingCost = 0;
+    let items = [];
+    let unknownItems = [];
+
+    parsedItems.forEach(item => {
+
+        const matched =
+            matchMenuItem(item.name);
+
+        if (!matched.matched) {
+
+            unknownItems.push(item.name);
+
+            return;
+        }
+
+        const itemMakingCost =
+            matched.makingCost * item.qty;
+
+        makingCost += itemMakingCost;
+
+        items.push({
+            name: matched.menuName,
+            qty: item.qty,
+            price: matched.sellingPrice,
+            cost: matched.makingCost,
+            totalCost: itemMakingCost,
+            menuId: matched.menuId
+        });
+
+    });
+
+    return {
+        items: items,
+        makingCost: makingCost,
+        unknownItems: unknownItems
+    };
+}
+
+/* =====================================================
+   CALCULATE IMPORTED ORDER FINANCIALS
+===================================================== */
+
+function calculateImportedOrder(order) {
+
+    const parsedItems =
+        parseOrderItems(order["Items in order"]);
+
+    let makingCost = 0;
+    let items = [];
+    let unknownItems = [];
+
+    parsedItems.forEach(item => {
+
+        const matched =
+            matchMenuItem(item.name);
+
+        if (!matched.matched) {
+
+            unknownItems.push(item.name);
+
+            return;
+        }
+
+        const itemMakingCost =
+            matched.makingCost * item.qty;
+
+        makingCost += itemMakingCost;
+
+        items.push({
+            name: matched.menuName,
+            qty: item.qty,
+            price: matched.sellingPrice,
+            cost: matched.makingCost,
+            totalCost: itemMakingCost,
+            menuId: matched.menuId
+        });
+
+    });
+
+    return {
+        items: items,
+        makingCost: makingCost,
+        unknownItems: unknownItems
     };
 }
 
