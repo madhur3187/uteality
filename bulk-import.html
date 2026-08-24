@@ -560,6 +560,15 @@ function parseZomatoCSV(csvText) {
 
         importedOrders.push(row);
 
+        if (importedOrders.length <= 5) {
+
+    console.log(
+        "Parsed items:",
+        parseOrderItems(row["Items in order"])
+    );
+
+}
+
     }
 
 
@@ -573,7 +582,81 @@ function parseZomatoCSV(csvText) {
 
 }
 
+/* =====================================================
+   PARSE ZOMATO ITEMS
+===================================================== */
 
+function parseOrderItems(itemsText) {
+
+    if (!itemsText) {
+        return [];
+    }
+
+    const items = [];
+
+    /*
+       Example:
+
+       1 x Sabudana Khichdi, 1 x Sabudana Vada
+
+       becomes:
+
+       [
+           {
+               name: "Sabudana Khichdi",
+               qty: 1
+           },
+           {
+               name: "Sabudana Vada",
+               qty: 1
+           }
+       ]
+    */
+
+    const parts = itemsText.split(",");
+
+    parts.forEach(part => {
+
+        part = part.trim();
+
+        if (!part) {
+            return;
+        }
+
+        const match =
+            part.match(/^(\d+)\s*x\s*(.+)$/i);
+
+        if (match) {
+
+            const qty =
+                parseInt(match[1], 10);
+
+            const name =
+                match[2].trim();
+
+            items.push({
+                name: name,
+                qty: qty
+            });
+
+        } else {
+
+            /*
+               If Zomato gives an unexpected format,
+               keep the item rather than losing it.
+            */
+
+            items.push({
+                name: part,
+                qty: 1
+            });
+
+        }
+
+    });
+
+    return items;
+}
 
 /* =====================================================
    DISPLAY ORDERS
