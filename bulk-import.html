@@ -571,20 +571,21 @@ function parseZomatoCSV(csvText) {
             ...matchMenuItem(item.name)
         }));
 
-if (importedOrders.length <= 5) {
+if (importedOrders.length <= 1) {
+
+    console.log("========== RAW ZOMATO ORDER ==========");
+    console.log(row);
 
     const financials =
         calculateImportedOrder(row);
 
-    console.log(
-        "ORDER FINANCIALS:",
-        {
-            orderId: row["Order ID"],
-            items: financials.items,
-            makingCost: financials.makingCost,
-            unknownItems: financials.unknownItems
-        }
-    );
+    console.log("========== ORDER FINANCIALS ==========");
+    console.log({
+        orderId: row["Order ID"],
+        items: financials.items,
+        makingCost: financials.makingCost,
+        unknownItems: financials.unknownItems
+    });
 
 }
 
