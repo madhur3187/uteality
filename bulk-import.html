@@ -319,6 +319,12 @@ Unknown Items
 
 let importedOrders = [];
 let menu = [];
+let packaging = [];
+
+let config = {
+    commission: 0,
+    longDistance: 0
+};
 
 /* =====================================================
    MENU DATA
@@ -331,10 +337,7 @@ async function loadMenu() {
 
     if (error) {
 
-        console.error(
-            "Error loading menu:",
-            error
-        );
+        console.error("Error loading menu:", error);
 
         showMessage(
             "Could not load menu items: " + error.message,
@@ -350,6 +353,75 @@ async function loadMenu() {
         "Menu items loaded:",
         menu.length
     );
+
+    // Load settings
+    const { data: settingsData, error: settingsError } =
+        await db
+            .from("settings")
+            .select("*")
+            .limit(1);
+
+    if (settingsError) {
+
+        console.error(
+            "Error loading settings:",
+            settingsError
+        );
+
+        showMessage(
+            "Could not load settings: " +
+            settingsError.message,
+            true
+        );
+
+        return false;
+    }
+
+    if (settingsData && settingsData[0]) {
+
+        config.commission =
+            Number(settingsData[0].commission || 0);
+
+        config.longDistance =
+            Number(settingsData[0].long_distance || 0);
+
+    }
+
+    console.log(
+        "Import settings:",
+        config
+    );
+
+
+    // Load packaging
+    const { data: packagingData, error: packagingError } =
+        await db
+            .from("packaging")
+            .select("*");
+
+    if (packagingError) {
+
+        console.error(
+            "Error loading packaging:",
+            packagingError
+        );
+
+        showMessage(
+            "Could not load packaging: " +
+            packagingError.message,
+            true
+        );
+
+        return false;
+    }
+
+    packaging = packagingData || [];
+
+    console.log(
+        "Packaging items loaded:",
+        packaging.length
+    );
+
 
     return true;
 }
@@ -571,24 +643,6 @@ function parseZomatoCSV(csvText) {
             ...matchMenuItem(item.name)
         }));
 
-if (importedOrders.length <= 1) {
-
-    console.log("========== RAW ZOMATO ORDER ==========");
-    console.log(row);
-
-    const financials =
-        calculateImportedOrder(row);
-
-    console.log("========== ORDER FINANCIALS ==========");
-    console.log({
-        orderId: row["Order ID"],
-        items: financials.items,
-        makingCost: financials.makingCost,
-        unknownItems: financials.unknownItems
-    });
-
-}
-
 }
 
     }
@@ -727,91 +781,336 @@ function calculateImportedOrder(order) {
     const parsedItems =
         parseOrderItems(order["Items in order"]);
 
+
     let makingCost = 0;
+
     let items = [];
+
     let unknownItems = [];
+
+    let selectedPackaging = [];
+
+
+    /*
+       -----------------------------------------------
+       ITEM COST CALCULATION
+       -----------------------------------------------
+    */
 
     parsedItems.forEach(item => {
 
         const matched =
             matchMenuItem(item.name);
 
-        if (!matched.matched) {
-
-            unknownItems.push(item.name);
-
-            return;
-        }
-
-        const itemMakingCost =
-            matched.makingCost * item.qty;
-
-        makingCost += itemMakingCost;
-
-        items.push({
-            name: matched.menuName,
-            qty: item.qty,
-            price: matched.sellingPrice,
-            cost: matched.makingCost,
-            totalCost: itemMakingCost,
-            menuId: matched.menuId
-        });
-
-    });
-
-    return {
-        items: items,
-        makingCost: makingCost,
-        unknownItems: unknownItems
-    };
-}
-
-/* =====================================================
-   CALCULATE IMPORTED ORDER FINANCIALS
-===================================================== */
-
-function calculateImportedOrder(order) {
-
-    const parsedItems =
-        parseOrderItems(order["Items in order"]);
-
-    let makingCost = 0;
-    let items = [];
-    let unknownItems = [];
-
-    parsedItems.forEach(item => {
-
-        const matched =
-            matchMenuItem(item.name);
 
         if (!matched.matched) {
 
             unknownItems.push(item.name);
 
             return;
+
         }
+
 
         const itemMakingCost =
             matched.makingCost * item.qty;
 
+
         makingCost += itemMakingCost;
 
+
         items.push({
+
             name: matched.menuName,
+
             qty: item.qty,
+
             price: matched.sellingPrice,
+
             cost: matched.makingCost,
+
             totalCost: itemMakingCost,
+
             menuId: matched.menuId
+
         });
+
+
+        /*
+           -------------------------------------------
+           DEFAULT PACKAGING
+           -------------------------------------------
+        */
+
+        let defaultPack =
+            matched.defaultPackaging;
+
+
+        if (typeof defaultPack === "string") {
+
+            try {
+
+                defaultPack =
+                    JSON.parse(defaultPack);
+
+            } catch {
+
+                defaultPack = [];
+
+            }
+
+        }
+
+
+        if (Array.isArray(defaultPack)) {
+
+            defaultPack.forEach(packItem => {
+
+                let packName = "";
+
+                let packQty = 1;
+
+
+                /*
+                   Supports:
+
+                   "Spoon"
+
+                   OR
+
+                   {
+                       name: "Spoon",
+                       qty: 1
+                   }
+                */
+
+                if (typeof packItem === "string") {
+
+                    packName =
+                        packItem.trim();
+
+                } else if (
+                    packItem &&
+                    typeof packItem === "object"
+                ) {
+
+                    packName =
+                        String(
+                            packItem.name || ""
+                        ).trim();
+
+                    packQty =
+                        Number(
+                            packItem.qty || 1
+                        );
+
+                }
+
+
+                if (!packName) {
+                    return;
+                }
+
+
+                /*
+                   Don't duplicate the same packaging
+                   when two items use it.
+                */
+
+                const existing =
+                    selectedPackaging.find(
+                        p =>
+                            p.name.toLowerCase() ===
+                            packName.toLowerCase()
+                    );
+
+
+                if (existing) {
+
+                    /*
+                       We intentionally keep the
+                       packaging item once per order.
+
+                       Example:
+
+                       Pasta → Spoon
+                       Drink → Spoon
+
+                       Result → 1 Spoon
+                    */
+
+                    return;
+
+                }
+
+
+                const packagingMatch =
+                    packaging.find(
+                        p =>
+                            String(p.name || "")
+                                .trim()
+                                .toLowerCase() ===
+                            packName.toLowerCase()
+                    );
+
+
+                if (!packagingMatch) {
+
+                    console.warn(
+                        "Packaging not found:",
+                        packName
+                    );
+
+                    return;
+
+                }
+
+
+                selectedPackaging.push({
+
+                    id: packagingMatch.id,
+
+                    name: packagingMatch.name,
+
+                    price:
+                        Number(
+                            packagingMatch.price || 0
+                        ),
+
+                    qty: packQty
+
+                });
+
+            });
+
+        }
 
     });
 
+
+    /*
+       -----------------------------------------------
+       PACKAGING COST
+       -----------------------------------------------
+    */
+
+    const packagingCost =
+        selectedPackaging.reduce(
+            (sum, p) =>
+                sum +
+                (
+                    Number(p.price || 0) *
+                    Number(p.qty || 1)
+                ),
+            0
+        );
+
+
+    /*
+       -----------------------------------------------
+       SELLING VALUE
+       -----------------------------------------------
+
+       IMPORTANT:
+
+       We use Zomato's "Total".
+
+       Example:
+
+       Bill subtotal = ₹218
+       Discount      = ₹43.60
+       Total          = ₹174.40
+
+       Therefore selling value = ₹174.40
+    */
+
+    const sellingValue =
+        Number(order["Total"]) || 0;
+
+
+    /*
+       -----------------------------------------------
+       COMMISSION
+       -----------------------------------------------
+    */
+
+    const commissionPercent =
+        Number(config.commission) || 0;
+
+
+    const commission =
+        sellingValue *
+        commissionPercent /
+        100;
+
+
+    /*
+       -----------------------------------------------
+       LONG DISTANCE FEE
+       -----------------------------------------------
+
+       For now we use the configured fee.
+
+       We will make the exact distance rule
+       part of the validation step.
+    */
+
+    const longDistanceFee =
+        Number(config.longDistance) || 0;
+
+
+    /*
+       -----------------------------------------------
+       NET PROFIT
+       -----------------------------------------------
+    */
+
+    const profit =
+        sellingValue
+        - commission
+        - packagingCost
+        - longDistanceFee
+        - makingCost;
+
+
+    /*
+       -----------------------------------------------
+       PROFIT MARGIN
+       -----------------------------------------------
+    */
+
+    const margin =
+        sellingValue > 0
+            ? (profit / sellingValue) * 100
+            : 0;
+
+
     return {
-        items: items,
-        makingCost: makingCost,
-        unknownItems: unknownItems
+
+        items,
+
+        makingCost,
+
+        unknownItems,
+
+        selectedPackaging,
+
+        packagingCost,
+
+        sellingValue,
+
+        commissionPercent,
+
+        commission,
+
+        longDistanceFee,
+
+        profit,
+
+        margin
+
     };
+
 }
 
 /* =====================================================
@@ -833,37 +1132,52 @@ function displayOrders() {
 
     let cancelled = 0;
 
-    let unknownItems = 0;
+    let unknownItemsCount = 0;
 
 
     importedOrders.forEach(order => {
 
+
         const status =
-    (order["Order Status"] || "")
-        .toLowerCase()
-        .trim();
-
-const cancellationReason =
-    (order["Cancellation / Rejection reason"] || "")
-        .toLowerCase()
-        .trim();
+            (order["Order Status"] || "")
+                .toLowerCase()
+                .trim();
 
 
-if (status === "delivered") {
+        const cancellationReason =
+            (order["Cancellation / Rejection reason"] || "")
+                .toLowerCase()
+                .trim();
 
-    delivered++;
 
-}
+        if (status === "delivered") {
+
+            delivered++;
+
+        }
 
 
-if (
-    status.includes("cancel") ||
-    cancellationReason.includes("cancel")
-) {
+        if (
+            status.includes("cancel") ||
+            cancellationReason.includes("cancel")
+        ) {
 
-    cancelled++;
+            cancelled++;
 
-}
+        }
+
+
+        /*
+           Only calculate financials for
+           delivered orders.
+        */
+
+        const financials =
+            calculateImportedOrder(order);
+
+
+        unknownItemsCount +=
+            financials.unknownItems.length;
 
 
         const tr =
@@ -889,7 +1203,9 @@ if (
             </td>
 
             <td>
-                ₹${formatNumber(order["Bill subtotal"])}
+                ₹${formatNumber(
+                    order["Bill subtotal"]
+                )}
             </td>
 
             <td>
@@ -900,12 +1216,44 @@ if (
 
             <td>
                 ₹${formatNumber(
-                    order["Packaging charges"]
+                    financials.sellingValue
                 )}
             </td>
 
             <td>
-                ₹${formatNumber(order["Total"])}
+                ₹${formatNumber(
+                    financials.makingCost
+                )}
+            </td>
+
+            <td>
+                ₹${formatNumber(
+                    financials.packagingCost
+                )}
+            </td>
+
+            <td>
+                ₹${formatNumber(
+                    financials.commission
+                )}
+            </td>
+
+            <td>
+                ₹${formatNumber(
+                    financials.longDistanceFee
+                )}
+            </td>
+
+            <td>
+                <strong>
+                    ₹${formatNumber(
+                        financials.profit
+                    )}
+                </strong>
+            </td>
+
+            <td>
+                ${financials.margin.toFixed(1)}%
             </td>
 
         `;
@@ -937,7 +1285,7 @@ if (
     document.getElementById(
         "unknownItems"
     ).innerText =
-        unknownItems;
+        unknownItemsCount;
 
 
     document.getElementById(
