@@ -1035,14 +1035,14 @@ function calculateImportedOrder(order) {
     sellingValue,
 
     // Settlement values will be added later
-    commission: 0,
-    adCharges: 0,
-    paymentGatewayCharges: 0,
-    taxes: 0,
-    longDistanceFee: 0,
+    commission: null,
+adCharges: null,
+paymentGatewayCharges: null,
+taxes: null,
+longDistanceFee: null,
 
-    netProfit: null,
-    margin: null
+netProfit: null,
+margin: null
 };
 
 }
@@ -1167,21 +1167,23 @@ function displayOrders() {
             </td>
 
             <td>
-                ₹${formatNumber(
-                    financials.commission
-                )}
+                ${financials.commission !== null
+    ? "₹" + formatNumber(financials.commission)
+    : "-"
+}
             </td>
 
             <td>
-                ₹${formatNumber(
-                    financials.longDistanceFee
-                )}
+                ${financials.longDistanceFee !== null
+    ? "₹" + formatNumber(financials.longDistanceFee)
+    : "-"
+}
             </td>
 
             <td>
                 <strong>
     ${financials.profit !== null
-        ? "₹" + formatNumber(financials.profit)
+        ? "₹" + formatNumber(financials.netProfit)
         : "-"
     }
 </strong>
