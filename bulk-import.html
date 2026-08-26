@@ -1026,88 +1026,24 @@ function calculateImportedOrder(order) {
         Number(order["Total"]) || 0;
 
 
-    /*
-       -----------------------------------------------
-       COMMISSION
-       -----------------------------------------------
-    */
-
-    const commissionPercent =
-        Number(config.commission) || 0;
-
-
-    const commission =
-        sellingValue *
-        commissionPercent /
-        100;
-
-
-    /*
-       -----------------------------------------------
-       LONG DISTANCE FEE
-       -----------------------------------------------
-
-       For now we use the configured fee.
-
-       We will make the exact distance rule
-       part of the validation step.
-    */
-
-    const longDistanceFee =
-        Number(config.longDistance) || 0;
-
-
-    /*
-       -----------------------------------------------
-       NET PROFIT
-       -----------------------------------------------
-    */
-
-    const profit =
-        sellingValue
-        - commission
-        - packagingCost
-        - longDistanceFee
-        - makingCost;
-
-
-    /*
-       -----------------------------------------------
-       PROFIT MARGIN
-       -----------------------------------------------
-    */
-
-    const margin =
-        sellingValue > 0
-            ? (profit / sellingValue) * 100
-            : 0;
-
-
     return {
+    items,
+    makingCost,
+    unknownItems,
+    selectedPackaging,
+    packagingCost,
+    sellingValue,
 
-        items,
+    // Settlement values will be added later
+    commission: 0,
+    adCharges: 0,
+    paymentGatewayCharges: 0,
+    taxes: 0,
+    longDistanceFee: 0,
 
-        makingCost,
-
-        unknownItems,
-
-        selectedPackaging,
-
-        packagingCost,
-
-        sellingValue,
-
-        commissionPercent,
-
-        commission,
-
-        longDistanceFee,
-
-        profit,
-
-        margin
-
-    };
+    netProfit: null,
+    margin: null
+};
 
 }
 
