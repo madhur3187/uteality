@@ -1181,8 +1181,9 @@ function displayOrders() {
             </td>
 
             <td>
-                <strong>
-    ${financials.profit !== null
+                
+    <strong>
+    ${financials.netProfit !== null
         ? "₹" + formatNumber(financials.netProfit)
         : "-"
     }
