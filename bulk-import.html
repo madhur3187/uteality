@@ -1180,14 +1180,18 @@ function displayOrders() {
 
             <td>
                 <strong>
-                    ₹${formatNumber(
-                        financials.profit
-                    )}
-                </strong>
+    ${financials.profit !== null
+        ? "₹" + formatNumber(financials.profit)
+        : "-"
+    }
+</strong>
             </td>
 
             <td>
-                ${financials.margin.toFixed(1)}%
+                ${financials.margin !== null
+    ? financials.margin.toFixed(1) + "%"
+    : "-"
+}
             </td>
 
         `;
