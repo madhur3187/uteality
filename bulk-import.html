@@ -818,7 +818,7 @@ console.log(
            calculations yet.
         */
 
-        displayOrders();
+        displayOrders(totalPayout);
 
 
         showMessage(
@@ -1378,7 +1378,13 @@ function calculateImportedOrder(order) {
 // =========================================================
 
 let platformPayout = 0;
-let nov = Number(order["Net Order Value"]) || 0;
+let nov =
+    Number(
+        String(order["Net Order Value"] ?? "")
+            .replace(/,/g, "")
+            .replace(/[₹]/g, "")
+            .trim()
+    ) || 0;
 
 let netProfit = null;
 let margin = null;
@@ -1415,7 +1421,7 @@ return {
    DISPLAY ORDERS
 ===================================================== */
 
-function displayOrders() {
+function displayOrders(totalPayout) {
 
     const tbody =
         document.getElementById(
