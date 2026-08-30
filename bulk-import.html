@@ -206,7 +206,33 @@ th {
     id="summarySection"
     class="card hidden">
 
-<h2>Import Summary</h2>
+<h2>Financial Summary</h2>
+
+<div class="summary">
+
+    <div class="summary-box">
+        NOV
+        <strong id="totalNOV">₹0.00</strong>
+    </div>
+
+    <div class="summary-box">
+        Payout Received
+        <strong id="totalPayout">₹0.00</strong>
+    </div>
+
+    <div class="summary-box">
+        Net Profit
+        <strong id="totalNetProfit">₹0.00</strong>
+    </div>
+
+    <div class="summary-box">
+        Net Margin
+        <strong id="totalMargin">0.0%</strong>
+    </div>
+
+</div>
+
+<h2 style="margin-top:25px;">Import Summary</h2>
 
 <div class="summary">
 
@@ -1268,21 +1294,16 @@ function calculateImportedOrder(order) {
 // FINAL PROFIT
 // =========================================================
 
+let platformPayout = 0;
+let nov = Number(order["Net Order Value"]) || 0;
+
 let netProfit = null;
 let margin = null;
-
-// Keep these outside the IF block
-// because they are returned below.
-let platformPayout = null;
-let nov = null;
 
 if (order._settlementMatched) {
 
     platformPayout =
         Number(order._platformPayout) || 0;
-
-    nov =
-        Number(order["Net Order Value"]) || 0;
 
     netProfit =
         platformPayout
@@ -1294,19 +1315,21 @@ if (order._settlementMatched) {
             (netProfit / platformPayout) * 100;
     }
 }
+
 return {
     items,
     nov,
-    sellingValue,
     platformPayout,
+    sellingValue,
     makingCost,
     packagingCost,
     netProfit,
     margin,
-    unknownItems
+    unknownItems,
+    commission,
+    longDistanceFee
 };
 }
-
 /* =====================================================
    DISPLAY ORDERS
 ===================================================== */
@@ -1327,6 +1350,16 @@ function displayOrders() {
     let cancelled = 0;
 
     let unknownItemsCount = 0;
+
+    // =========================================================
+// OVERALL FINANCIAL TOTALS
+// =========================================================
+
+let totalNOV = 0;
+let totalPayout = 0;
+let totalMakingCost = 0;
+let totalPackagingCost = 0;
+let totalNetProfit = 0;
 
 
     importedOrders.forEach(order => {
@@ -1368,6 +1401,27 @@ function displayOrders() {
 
         const financials =
             calculateImportedOrder(order);
+
+        // =========================================================
+// ACCUMULATE OVERALL FINANCIALS
+// =========================================================
+
+totalNOV += Number(financials.nov) || 0;
+
+if (financials.platformPayout !== null) {
+
+    totalPayout +=
+        Number(financials.platformPayout) || 0;
+
+    totalMakingCost +=
+        Number(financials.makingCost) || 0;
+
+    totalPackagingCost +=
+        Number(financials.packagingCost) || 0;
+
+    totalNetProfit +=
+        Number(financials.netProfit) || 0;
+}
 
 
         unknownItemsCount +=
@@ -1502,6 +1556,35 @@ function displayOrders() {
     showMessage(
         `Successfully read ${importedOrders.length} orders.`
     );
+
+    // =========================================================
+// DISPLAY OVERALL FINANCIAL SUMMARY
+// =========================================================
+
+const totalMargin =
+    totalPayout > 0
+        ? (totalNetProfit / totalPayout) * 100
+        : 0;
+
+document.getElementById(
+    "totalNOV"
+).innerText =
+    "₹" + formatNumber(totalNOV);
+
+document.getElementById(
+    "totalPayout"
+).innerText =
+    "₹" + formatNumber(totalPayout);
+
+document.getElementById(
+    "totalNetProfit"
+).innerText =
+    "₹" + formatNumber(totalNetProfit);
+
+document.getElementById(
+    "totalMargin"
+).innerText =
+    totalMargin.toFixed(1) + "%";
 
 }
 
