@@ -1310,9 +1310,9 @@ if (order._settlementMatched) {
         - makingCost
         - packagingCost;
 
-    if (platformPayout > 0) {
+    if (nov > 0) {
         margin =
-            (netProfit / platformPayout) * 100;
+            (netProfit / nov) * 100;
     }
 }
 
@@ -1561,7 +1561,7 @@ if (financials.platformPayout !== null) {
 
 const totalMargin =
     totalPayout > 0
-        ? (totalNetProfit / totalPayout) * 100
+        ? (totalNetProfit / totalNOV) * 100
         : 0;
 
 document.getElementById(
