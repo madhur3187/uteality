@@ -565,11 +565,18 @@ async function analyzeReports() {
                     defval: ""
                 }
             );
+        
+        const validSettlementRows = settlementRows.filter(row => {
+    const orderId = String(row["Order ID"] || "").trim();
 
+    return orderId &&
+           orderId !== "#REF!" &&
+           orderId !== "#N/A";
+});
 
         console.log(
             "Settlement Order Level rows:",
-            settlementRows
+            validSettlementRows
         );
 
 
@@ -581,7 +588,7 @@ async function analyzeReports() {
             new Map();
 
 
-        settlementRows.forEach(row => {
+        validSettlementRows.forEach(row => {
 
             const orderId =
                 String(
