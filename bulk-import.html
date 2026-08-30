@@ -672,7 +672,54 @@ async function analyzeReports() {
 
             matchedCount++;
 
-        });
+});
+
+/* =========================================================
+   CALCULATE MAKING COST
+========================================================= */
+
+importedOrders.forEach(order => {
+
+    if (!order._settlementMatched) {
+        return;
+    }
+
+    const itemsText = order["Items in order"] || "";
+
+    let makingCost = 0;
+    const unknownItems = [];
+
+    const parts = itemsText.split(/\s*,\s*/);
+
+    parts.forEach(part => {
+
+        const match = part.match(/^(\d+)\s*x\s*(.+)$/i);
+
+        if (!match) {
+            unknownItems.push(part);
+            return;
+        }
+
+        const qty = Number(match[1]);
+        const itemName = match[2].trim();
+
+        const menuItem = menuItems.find(
+            item =>
+                item.name.trim().toLowerCase() ===
+                itemName.toLowerCase()
+        );
+
+        if (!menuItem) {
+            unknownItems.push(itemName);
+            return;
+        }
+
+        makingCost += qty * Number(menuItem.cost || 0);
+    });
+
+    order._makingCost = makingCost;
+    order._unknownItems = unknownItems;
+});
 
 
         /* =============================================
