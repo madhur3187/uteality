@@ -5,6 +5,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <meta charset="UTF-8">
 
@@ -157,37 +158,38 @@ th {
 
 <div class="card">
 
-<h2>Upload Order Report</h2>
+<h2>Upload Platform Reports</h2>
 
 <div class="upload-row">
 
-<select id="platform">
+    <select id="platform">
+        <option value="zomato">Zomato</option>
+        <option value="swiggy">Swiggy</option>
+    </select>
 
-<option value="zomato">
-Zomato
-</option>
+    <div>
+        <label><strong>Order Report</strong></label><br>
+        <input
+            type="file"
+            id="orderFile"
+            accept=".csv,.xlsx,.xls"
+        >
+    </div>
 
-<option value="swiggy">
-Swiggy
-</option>
+    <div>
+        <label><strong>Settlement / Invoice Report</strong></label><br>
+        <input
+            type="file"
+            id="settlementFile"
+            accept=".csv,.xlsx,.xls"
+        >
+    </div>
 
-</select>
-
-
-<input
-    type="file"
-    id="orderFile"
-    accept=".csv"
->
-
-
-<button
-    type="button"
-    onclick="readOrderFile()">
-
-Analyze File
-
-</button>
+    <button
+        type="button"
+        onclick="analyzeReports()">
+        Analyze Reports
+    </button>
 
 </div>
 
