@@ -351,6 +351,7 @@ Unknown Items
 let importedOrders = [];
 let menu = [];
 let packaging = [];
+let overallPayout = 0;
 
 let config = {
     commission: 0,
@@ -601,7 +602,7 @@ const payoutBreakupRows =
         }
     );
 
-let totalPayout = null;
+overallPayout = 0;
 
 for (const row of payoutBreakupRows) {
 
@@ -639,15 +640,15 @@ for (const row of payoutBreakupRows) {
             // Example:
             // 5006.51 | 295.14 | 5301.65
 
-            totalPayout =
-                numericValues[numericValues.length - 1];
+            overallPayout =
+    numericValues[numericValues.length - 1];
         }
 
         break;
     }
 }
 
-if (totalPayout === null) {
+if (overallPayout === null) {
     throw new Error(
         'Could not find "Pending amount" in Zomato Payout Breakup.'
     );
@@ -655,7 +656,7 @@ if (totalPayout === null) {
 
 console.log(
     "Overall Zomato Payout:",
-    totalPayout
+    overallPayout
 );
 
 
@@ -1493,6 +1494,8 @@ const financials =
 
 if (status === "delivered") {
 
+ if (status === "delivered") {
+
     totalNOV +=
         Number(financials.nov) || 0;
 
@@ -1501,6 +1504,7 @@ if (status === "delivered") {
 
     totalPackagingCost +=
         Number(financials.packagingCost) || 0;
+}
 }
 
         unknownItemsCount +=
@@ -1597,6 +1601,13 @@ if (status === "delivered") {
 
     });
 
+const totalExpenses =
+    totalMakingCost +
+    totalPackagingCost;
+
+totalNetProfit =
+    overallPayout -
+    totalExpenses;
 
     document.getElementById(
         "ordersFound"
@@ -1639,13 +1650,6 @@ if (status === "delivered") {
     // =========================================================
 // DISPLAY OVERALL FINANCIAL SUMMARY
 // =========================================================
-const totalExpenses =
-    totalMakingCost +
-    totalPackagingCost;
-
-const totalNetProfit =
-    totalPayout -
-    totalExpenses;
 
 const totalMargin =
     totalNOV > 0
@@ -1660,7 +1664,7 @@ document.getElementById(
 document.getElementById(
     "totalPayout"
 ).innerText =
-    "₹" + formatNumber(totalPayout);
+    "₹" + formatNumber(overallPayout);
 
     document.getElementById(
     "totalExpenses"
