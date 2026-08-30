@@ -703,7 +703,7 @@ importedOrders.forEach(order => {
         const qty = Number(match[1]);
         const itemName = match[2].trim();
 
-        const menuItem = menuItems.find(
+        const menuItem = menu.find(
             item =>
                 item.name.trim().toLowerCase() ===
                 itemName.toLowerCase()
