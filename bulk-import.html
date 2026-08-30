@@ -427,75 +427,318 @@ async function loadMenu() {
 }
 
 /* =====================================================
-   READ ORDER FILE
+   ANALYZE ORDER + SETTLEMENT REPORTS
 ===================================================== */
 
-async function readOrderFile() {
+async function analyzeReports() {
 
-    const fileInput =
-        document.getElementById("orderFile");
+    const platform =
+        document.getElementById("platform").value;
 
-    const file = fileInput.files[0];
+    const orderFile =
+        document.getElementById("orderFile").files[0];
+
+    const settlementFile =
+        document.getElementById("settlementFile").files[0];
 
 
-    if (!file) {
+    if (!orderFile) {
+        alert("Please select the Order Report.");
+        return;
+    }
 
-        alert("Please select a CSV file first.");
+    if (!settlementFile) {
+        alert("Please select the Settlement / Invoice Report.");
+        return;
+    }
+
+
+    /*
+       For now we finish Zomato first.
+       Swiggy will use the same flow afterwards.
+    */
+
+    if (platform !== "zomato") {
+
+        alert(
+            "Swiggy matching will be added after Zomato is verified."
+        );
 
         return;
-
     }
-    const menuLoaded = await loadMenu();
+
+
+    const menuLoaded =
+        await loadMenu();
 
     if (!menuLoaded) {
         return;
     }
 
 
-    const platform =
-        document.getElementById("platform").value;
+    try {
 
-
-    if (platform !== "zomato") {
-
-        alert(
-            "Swiggy importer is not built yet. We will add it after Zomato is working."
+        showMessage(
+            "Reading Order Report and Settlement Report..."
         );
 
-        return;
 
-    }
+        /* =============================================
+           1. READ ZOMATO ORDER HISTORY CSV
+        ============================================= */
 
+        const csvText =
+            await orderFile.text();
 
-    const reader = new FileReader();
-
-
-    reader.onload = function(event) {
-
-        try {
-
-            const csvText =
-                event.target.result;
+        parseZomatoCSV(csvText);
 
 
-            parseZomatoCSV(csvText);
+        /*
+           parseZomatoCSV() already fills:
+
+           importedOrders = [...]
+
+           Each row contains:
+           Order ID
+           Items in order
+           Order Status
+           etc.
+        */
 
 
-        } catch (error) {
+        /* =============================================
+           2. READ ZOMATO SETTLEMENT XLSX
+        ============================================= */
 
-            console.error(error);
+        const settlementBuffer =
+            await settlementFile.arrayBuffer();
 
-            showMessage(
-                "Error reading file: " + error.message,
-                true
+        const workbook =
+            XLSX.read(
+                settlementBuffer,
+                {
+                    type: "array"
+                }
+            );
+
+
+        console.log(
+            "Settlement sheets:",
+            workbook.SheetNames
+        );
+
+
+        /*
+           Zomato workbook contains:
+           "Order Level"
+
+           That is the sheet containing
+           individual order payouts.
+        */
+
+        const orderLevelSheet =
+            workbook.Sheets["Order Level"];
+
+
+        if (!orderLevelSheet) {
+
+            throw new Error(
+                'Could not find "Order Level" sheet in Zomato Settlement Report.'
             );
 
         }
 
-    };
+
+        /*
+           Header row in the Zomato settlement
+           report is Excel row 7.
+
+           XLSX range is zero-based,
+           therefore range: 6.
+        */
+
+        const settlementRows =
+            XLSX.utils.sheet_to_json(
+                orderLevelSheet,
+                {
+                    range: 6,
+                    defval: ""
+                }
+            );
 
 
-    reader.readAsText(file);
+        console.log(
+            "Settlement Order Level rows:",
+            settlementRows
+        );
+
+
+        /* =============================================
+           3. BUILD SETTLEMENT LOOKUP BY ORDER ID
+        ============================================= */
+
+        const settlementMap =
+            new Map();
+
+
+        settlementRows.forEach(row => {
+
+            const orderId =
+                String(
+                    row["Order ID"] ?? ""
+                )
+                .trim();
+
+
+            if (!orderId) {
+                return;
+            }
+
+
+            settlementMap.set(
+                orderId,
+                row
+            );
+
+        });
+
+
+        console.log(
+            "Settlement Order IDs loaded:",
+            settlementMap.size
+        );
+
+
+        /* =============================================
+           4. MATCH ORDER HISTORY WITH SETTLEMENT
+        ============================================= */
+
+        let matchedCount = 0;
+        let unmatchedCount = 0;
+
+
+        importedOrders.forEach(order => {
+
+            const orderId =
+                String(
+                    order["Order ID"] ?? ""
+                )
+                .trim();
+
+
+            const settlement =
+                settlementMap.get(orderId);
+
+
+            if (!settlement) {
+
+                order._settlementMatched = false;
+                order._settlement = null;
+                order._platformPayout = null;
+
+                unmatchedCount++;
+
+                return;
+            }
+
+
+            order._settlementMatched = true;
+
+            /*
+               Keep the full settlement row temporarily.
+
+               Later this can go into raw_data.
+            */
+
+            order._settlement =
+                settlement;
+
+
+            /*
+               THIS is the important Zomato figure.
+
+               Zomato has already deducted its
+               service fees, taxes, long distance,
+               payment fees, etc.
+            */
+
+            order._platformPayout =
+                Number(
+                    settlement[
+                        "Order level Payout\n(A) - (F) + (G)"
+                    ]
+                ) || 0;
+
+
+            matchedCount++;
+
+        });
+
+
+        /* =============================================
+           5. DEBUG FIRST FEW MATCHES
+        ============================================= */
+
+        console.log(
+            "Matched Orders:",
+            importedOrders
+                .filter(
+                    order =>
+                        order._settlementMatched
+                )
+                .slice(0, 5)
+                .map(order => ({
+                    orderId:
+                        order["Order ID"],
+
+                    items:
+                        order["Items in order"],
+
+                    platformPayout:
+                        order._platformPayout
+                }))
+        );
+
+
+        console.log(
+            "Matched:",
+            matchedCount,
+            "Unmatched:",
+            unmatchedCount
+        );
+
+
+        /*
+           Refresh existing table.
+
+           We are NOT changing profit
+           calculations yet.
+        */
+
+        displayOrders();
+
+
+        showMessage(
+            `Order Report: ${importedOrders.length} orders | ` +
+            `Settlement matched: ${matchedCount} | ` +
+            `Unmatched: ${unmatchedCount}`
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Report analysis error:",
+            error
+        );
+
+        showMessage(
+            "Error analyzing reports: " +
+            error.message,
+            true
+        );
+
+    }
 
 }
 
