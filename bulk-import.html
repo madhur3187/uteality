@@ -1304,8 +1304,30 @@ function calculateImportedOrder(order) {
     const sellingValue =
         Number(order["Total"]) || 0;
 
+        // =========================================================
+// FINAL PROFIT
+// =========================================================
 
-    return {
+let netProfit = null;
+let margin = null;
+
+if (order._settlementMatched) {
+
+    const platformPayout =
+        Number(order._platformPayout) || 0;
+
+    netProfit =
+        platformPayout
+        - makingCost
+        - packagingCost;
+
+    if (platformPayout > 0) {
+        margin =
+            (netProfit / platformPayout) * 100;
+    }
+}
+
+   return {
     items,
     makingCost,
     unknownItems,
@@ -1313,15 +1335,15 @@ function calculateImportedOrder(order) {
     packagingCost,
     sellingValue,
 
-    // Settlement values will be added later
-    commission: null,
-adCharges: null,
-paymentGatewayCharges: null,
-taxes: null,
-longDistanceFee: null,
+    // Actual payout from Zomato Settlement Report
+    platformPayout:
+        order._settlementMatched
+            ? Number(order._platformPayout) || 0
+            : null,
 
-netProfit: null,
-margin: null
+    // Final profit will be calculated below
+    netProfit: null,
+    margin: null
 };
 
 }
