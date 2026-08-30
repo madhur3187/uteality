@@ -679,25 +679,10 @@ async function analyzeReports() {
            5. DEBUG FIRST FEW MATCHES
         ============================================= */
 
-        console.log(
-            "Matched Orders:",
-            importedOrders
-                .filter(
-                    order =>
-                        order._settlementMatched
-                )
-                .slice(0, 5)
-                .map(order => ({
-                    orderId:
-                        order["Order ID"],
-
-                    items:
-                        order["Items in order"],
-
-                    platformPayout:
-                        order._platformPayout
-                }))
-        );
+       console.log("========== MATCHED ORDER SAMPLE ==========");
+console.log(matchedOrders[0]);
+console.log("========== ALL MATCHED ORDERS ==========");
+console.log(matchedOrders);
 
 
         console.log(
