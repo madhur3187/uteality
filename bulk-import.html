@@ -1264,17 +1264,25 @@ function calculateImportedOrder(order) {
     const sellingValue =
         Number(order["Total"]) || 0;
 
-        // =========================================================
+// =========================================================
 // FINAL PROFIT
 // =========================================================
 
 let netProfit = null;
 let margin = null;
 
+// Keep these outside the IF block
+// because they are returned below.
+let platformPayout = null;
+let nov = null;
+
 if (order._settlementMatched) {
 
-    const platformPayout =
+    platformPayout =
         Number(order._platformPayout) || 0;
+
+    nov =
+        Number(order["Net Order Value"]) || 0;
 
     netProfit =
         platformPayout
@@ -1286,26 +1294,17 @@ if (order._settlementMatched) {
             (netProfit / platformPayout) * 100;
     }
 }
-
-   return {
+return {
     items,
-    makingCost,
-    unknownItems,
-    selectedPackaging,
-    packagingCost,
+    nov,
     sellingValue,
-
-    // Actual payout from Zomato Settlement Report
-    platformPayout:
-        order._settlementMatched
-            ? Number(order._platformPayout) || 0
-            : null,
-
-    // Final profit will be calculated below
+    platformPayout,
+    makingCost,
+    packagingCost,
     netProfit,
-    margin
+    margin,
+    unknownItems
 };
-
 }
 
 /* =====================================================
