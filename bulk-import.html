@@ -1295,7 +1295,7 @@ function calculateImportedOrder(order) {
 // =========================================================
 
 let platformPayout = 0;
-let nov = Number(order["Net Order Value"]) || 0;
+let nov = Number(order["Total"]) || 0;
 
 let netProfit = null;
 let margin = null;
