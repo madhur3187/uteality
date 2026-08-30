@@ -216,14 +216,19 @@ th {
     </div>
 
     <div class="summary-box">
-        Payout Received
-        <strong id="totalPayout">₹0.00</strong>
-    </div>
+    Payout Received
+    <strong id="totalPayout">₹0.00</strong>
+</div>
 
-    <div class="summary-box">
-        Net Profit
-        <strong id="totalNetProfit">₹0.00</strong>
-    </div>
+<div class="summary-box">
+    Total Expenses
+    <strong id="totalExpenses">₹0.00</strong>
+</div>
+
+<div class="summary-box">
+    Net Profit
+    <strong id="totalNetProfit">₹0.00</strong>
+</div>
 
     <div class="summary-box">
         Net Margin
@@ -574,6 +579,85 @@ async function analyzeReports() {
 
         }
 
+        // =========================================================
+// READ OVERALL PAYOUT FROM "Payout Breakup"
+// =========================================================
+
+const payoutBreakupSheet =
+    workbook.Sheets["Payout Breakup"];
+
+if (!payoutBreakupSheet) {
+    throw new Error(
+        'Could not find "Payout Breakup" sheet in Zomato Settlement Report.'
+    );
+}
+
+const payoutBreakupRows =
+    XLSX.utils.sheet_to_json(
+        payoutBreakupSheet,
+        {
+            header: 1,
+            defval: ""
+        }
+    );
+
+let totalPayout = null;
+
+for (const row of payoutBreakupRows) {
+
+    const rowText =
+        row
+            .map(cell => String(cell ?? ""))
+            .join(" ")
+            .toLowerCase();
+
+    if (
+        rowText.includes("pending amount") &&
+        rowText.includes("credited")
+    ) {
+
+        const numericValues =
+            row
+                .map(cell => {
+                    const cleaned =
+                        String(cell ?? "")
+                            .replace(/,/g, "")
+                            .replace(/[₹]/g, "")
+                            .trim();
+
+                    const value =
+                        Number(cleaned);
+
+                    return Number.isFinite(value)
+                        ? value
+                        : null;
+                })
+                .filter(value => value !== null);
+
+        if (numericValues.length > 0) {
+            // Last numeric value is the TOTAL
+            // Example:
+            // 5006.51 | 295.14 | 5301.65
+
+            totalPayout =
+                numericValues[numericValues.length - 1];
+        }
+
+        break;
+    }
+}
+
+if (totalPayout === null) {
+    throw new Error(
+        'Could not find "Pending amount" in Zomato Payout Breakup.'
+    );
+}
+
+console.log(
+    "Overall Zomato Payout:",
+    totalPayout
+);
+
 
         /*
            Header row in the Zomato settlement
@@ -706,7 +790,6 @@ async function analyzeReports() {
             matchedCount++;
 
 });
-
 
         /* =============================================
            5. DEBUG FIRST FEW MATCHES
@@ -1295,7 +1378,7 @@ function calculateImportedOrder(order) {
 // =========================================================
 
 let platformPayout = 0;
-let nov = Number(order["Total"]) || 0;
+let nov = Number(order["Net Order Value"]) || 0;
 
 let netProfit = null;
 let margin = null;
@@ -1354,10 +1437,8 @@ function displayOrders() {
 // =========================================================
 
 let totalNOV = 0;
-let totalPayout = 0;
 let totalMakingCost = 0;
 let totalPackagingCost = 0;
-let totalNetProfit = 0;
 
 
     importedOrders.forEach(order => {
@@ -1397,30 +1478,24 @@ let totalNetProfit = 0;
            delivered orders.
         */
 
-        const financials =
-            calculateImportedOrder(order);
+const financials =
+    calculateImportedOrder(order);
 
-        // =========================================================
+// =========================================================
 // ACCUMULATE OVERALL FINANCIALS
 // =========================================================
 
-totalNOV += Number(financials.nov) || 0;
+if (status === "delivered") {
 
-if (financials.platformPayout !== null) {
-
-    totalPayout +=
-        Number(financials.platformPayout) || 0;
+    totalNOV +=
+        Number(financials.nov) || 0;
 
     totalMakingCost +=
         Number(financials.makingCost) || 0;
 
     totalPackagingCost +=
         Number(financials.packagingCost) || 0;
-
-    totalNetProfit +=
-        Number(financials.netProfit) || 0;
 }
-
 
         unknownItemsCount +=
             financials.unknownItems.length;
@@ -1558,9 +1633,16 @@ if (financials.platformPayout !== null) {
     // =========================================================
 // DISPLAY OVERALL FINANCIAL SUMMARY
 // =========================================================
+const totalExpenses =
+    totalMakingCost +
+    totalPackagingCost;
+
+const totalNetProfit =
+    totalPayout -
+    totalExpenses;
 
 const totalMargin =
-    totalPayout > 0
+    totalNOV > 0
         ? (totalNetProfit / totalNOV) * 100
         : 0;
 
@@ -1573,6 +1655,11 @@ document.getElementById(
     "totalPayout"
 ).innerText =
     "₹" + formatNumber(totalPayout);
+
+    document.getElementById(
+    "totalExpenses"
+).innerText =
+    "₹" + formatNumber(totalExpenses);
 
 document.getElementById(
     "totalNetProfit"
