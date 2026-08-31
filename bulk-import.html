@@ -603,51 +603,132 @@ const payoutBreakupRows =
         }
     );
 
-overallPayout = 0;
+// =========================================================
+// READ OVERALL PAYOUT + NOV FROM "Payout Breakup"
+// =========================================================
+
+overallPayout = null;
+overallNOV = null;
 
 for (const row of payoutBreakupRows) {
 
-    const rowText =
-        row
-            .map(cell => String(cell ?? ""))
-            .join(" ")
-            .toLowerCase();
+    const rowText = row
+        .map(cell => String(cell ?? ""))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+
+    // -----------------------------------------------------
+    // PAYOUT RECEIVED
+    // "Pending amount (will be credited on next payout day)"
+    // -----------------------------------------------------
 
     if (
         rowText.includes("pending amount") &&
         rowText.includes("credited")
     ) {
 
-        const numericValues =
-            row
-                .map(cell => {
-                    const cleaned =
-                        String(cell ?? "")
-                            .replace(/,/g, "")
-                            .replace(/[₹]/g, "")
-                            .trim();
+        const numericValues = row
+            .map(cell => {
 
-                    const value =
-                        Number(cleaned);
+                const cleaned = String(cell ?? "")
+                    .replace(/,/g, "")
+                    .replace(/[₹]/g, "")
+                    .trim();
 
-                    return Number.isFinite(value)
-                        ? value
-                        : null;
-                })
-                .filter(value => value !== null);
+                const value = Number(cleaned);
+
+                return Number.isFinite(value)
+                    ? value
+                    : null;
+            })
+            .filter(value => value !== null);
 
         if (numericValues.length > 0) {
-            // Last numeric value is the TOTAL
-            // Example:
-            // 5006.51 | 295.14 | 5301.65
 
             overallPayout =
-    numericValues[numericValues.length - 1];
-        }
+                numericValues[numericValues.length - 1];
 
-        break;
+            console.log(
+                "Payout Breakup - Payout Received:",
+                overallPayout
+            );
+        }
+    }
+
+
+    // -----------------------------------------------------
+    // NOV
+    // "Net order value"
+    // -----------------------------------------------------
+
+    if (
+        rowText.includes("net order value")
+    ) {
+
+        const numericValues = row
+            .map(cell => {
+
+                const cleaned = String(cell ?? "")
+                    .replace(/,/g, "")
+                    .replace(/[₹]/g, "")
+                    .trim();
+
+                const value = Number(cleaned);
+
+                return Number.isFinite(value)
+                    ? value
+                    : null;
+            })
+            .filter(value => value !== null);
+
+        if (numericValues.length >= 2) {
+
+            // Delivered Orders NOV
+            // Example:
+            // 8398.11 | 537.00 | 8935.11
+
+            overallNOV =
+                numericValues[0];
+
+            console.log(
+                "Payout Breakup - Delivered NOV:",
+                overallNOV
+            );
+        }
     }
 }
+
+
+// ---------------------------------------------------------
+// VALIDATION
+// ---------------------------------------------------------
+
+if (overallPayout === null) {
+
+    throw new Error(
+        'Could not find Payout Received in "Payout Breakup".'
+    );
+}
+
+if (overallNOV === null) {
+
+    throw new Error(
+        'Could not find Delivered NOV in "Payout Breakup".'
+    );
+}
+
+
+console.log(
+    "FINAL OVERALL NOV:",
+    overallNOV
+);
+
+console.log(
+    "FINAL OVERALL PAYOUT:",
+    overallPayout
+);
 
 if (overallPayout === null) {
     throw new Error(
@@ -1482,9 +1563,9 @@ function displayOrders() {
 // OVERALL FINANCIAL TOTALS
 // =========================================================
 
-let totalNOV = 0;
 let totalMakingCost = 0;
 let totalPackagingCost = 0;
+let totalNetProfit = 0;
 
 
     importedOrders.forEach(order => {
