@@ -352,6 +352,7 @@ let importedOrders = [];
 let menu = [];
 let packaging = [];
 let overallPayout = 0;
+let overallNOV = 0;
 
 let config = {
     commission: 0,
@@ -660,13 +661,53 @@ console.log(
 );
 
 
-        /*
-           Header row in the Zomato settlement
-           report is Excel row 7.
+overallNOV = 0;
 
-           XLSX range is zero-based,
-           therefore range: 6.
-        */
+for (const row of payoutBreakupRows) {
+
+    const rowText =
+        row
+            .map(cell => String(cell ?? ""))
+            .join(" ")
+            .toLowerCase();
+
+    if (
+        rowText.includes("net order value")
+    ) {
+
+        const numericValues =
+            row
+                .map(cell => {
+
+                    const cleaned =
+                        String(cell ?? "")
+                            .replace(/,/g, "")
+                            .replace(/[₹]/g, "")
+                            .trim();
+
+                    const value =
+                        Number(cleaned);
+
+                    return Number.isFinite(value)
+                        ? value
+                        : null;
+
+                })
+                .filter(value => value !== null);
+
+        if (numericValues.length >= 2) {
+
+            // Delivered Orders value
+            // Example: 8398.11 | 537.00 | 8935.11
+
+            overallNOV =
+                numericValues[0];
+
+        }
+
+        break;
+    }
+}
 
         const settlementRows =
             XLSX.utils.sheet_to_json(
@@ -1000,8 +1041,6 @@ function parseZomatoCSV(csvText) {
         importedOrders
     );
 
-
-    displayOrders();
 
 }
 
@@ -1422,7 +1461,7 @@ return {
    DISPLAY ORDERS
 ===================================================== */
 
-function displayOrders(totalPayout) {
+function displayOrders() {
 
     const tbody =
         document.getElementById(
@@ -1494,10 +1533,6 @@ const financials =
 
 if (status === "delivered") {
 
- if (status === "delivered") {
-
-    totalNOV +=
-        Number(financials.nov) || 0;
 
     totalMakingCost +=
         Number(financials.makingCost) || 0;
@@ -1505,7 +1540,7 @@ if (status === "delivered") {
     totalPackagingCost +=
         Number(financials.packagingCost) || 0;
 }
-}
+
 
         unknownItemsCount +=
             financials.unknownItems.length;
@@ -1652,14 +1687,14 @@ totalNetProfit =
 // =========================================================
 
 const totalMargin =
-    totalNOV > 0
-        ? (totalNetProfit / totalNOV) * 100
+    overallNOV > 0
+        ? (totalNetProfit / overallNOV) * 100
         : 0;
 
 document.getElementById(
     "totalNOV"
 ).innerText =
-    "₹" + formatNumber(totalNOV);
+    "₹" + formatNumber(overallNOV);
 
 document.getElementById(
     "totalPayout"
