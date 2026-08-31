@@ -603,6 +603,11 @@ const payoutBreakupRows =
         }
     );
 
+    console.log(
+    "RAW PAYOUT BREAKUP ROWS:",
+    payoutBreakupRows
+);
+
 // =========================================================
 // READ OVERALL PAYOUT + NOV FROM "Payout Breakup"
 // =========================================================
@@ -623,7 +628,10 @@ for (const row of payoutBreakupRows) {
     // PAYOUT RECEIVED
     // "Pending amount (will be credited on next payout day)"
     // -----------------------------------------------------
-
+console.log(
+    "PAYOUT BREAKUP ROW:",
+    row
+);
     if (
         rowText.includes("pending amount") &&
         rowText.includes("credited")
@@ -741,54 +749,6 @@ console.log(
     overallPayout
 );
 
-
-overallNOV = 0;
-
-for (const row of payoutBreakupRows) {
-
-    const rowText =
-        row
-            .map(cell => String(cell ?? ""))
-            .join(" ")
-            .toLowerCase();
-
-    if (
-        rowText.includes("net order value")
-    ) {
-
-        const numericValues =
-            row
-                .map(cell => {
-
-                    const cleaned =
-                        String(cell ?? "")
-                            .replace(/,/g, "")
-                            .replace(/[₹]/g, "")
-                            .trim();
-
-                    const value =
-                        Number(cleaned);
-
-                    return Number.isFinite(value)
-                        ? value
-                        : null;
-
-                })
-                .filter(value => value !== null);
-
-        if (numericValues.length >= 2) {
-
-            // Delivered Orders value
-            // Example: 8398.11 | 537.00 | 8935.11
-
-            overallNOV =
-                numericValues[0];
-
-        }
-
-        break;
-    }
-}
 
         const settlementRows =
             XLSX.utils.sheet_to_json(
